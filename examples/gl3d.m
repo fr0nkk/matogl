@@ -129,10 +129,10 @@ classdef gl3d < glCanvas
                 far = clamp(-obj.cam(6)*10,10,1e6);
                 
                 s = obj.figSize;
-                obj.MProj = MTransform('P',[[s/mean(s) 1].*near far]);
+                obj.MProj = MProj3D('P',[[s/mean(s) 1].*near far]);
                 obj.shaders.SetMat4(gl,'pointcloud','projection',obj.MProj);
                 
-                obj.MView = MTransform('T',obj.cam(4:6))*MTransform('RR',obj.cam(1:3),1)*MTransform('T',-obj.cam(7:9));
+                obj.MView = MTrans3D(obj.cam(4:6)) * MRot3D(obj.cam(1:3),1,[1 3]) * MTrans3D(-obj.cam(7:9));
                 obj.shaders.SetMat4(gl,'pointcloud','view',obj.MView);
 %                 mVP = mP*mV;
                 

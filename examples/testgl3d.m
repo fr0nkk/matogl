@@ -58,20 +58,20 @@ classdef testgl3d < glCanvas
             gl.glClear(glFlags(gl,'GL_COLOR_BUFFER_BIT','GL_DEPTH_BUFFER_BIT'));
             
             % make the view transform matrix and set it in the shader
-            m = MTransform('T',obj.cam(4:6))*MTransform('RR',obj.cam(1:3),1);
+            m = MTrans3D(obj.cam(4:6)) * MRot3D(obj.cam(1:3),1,[1 3]);
             
             obj.shaders.SetMat4(gl,'default3','view',m);
             
             obj.img.Draw(gl);
             obj.origin.Draw(gl);
             
-            transfText =  MTransform('T',[0.9 0 0.8]) * MTransform('R',[90 0 180],1) ;
+            transfText =  MTrans3D([0.9 0 0.8]) * MRot3D([90 0 180],1);
             obj.text.Render(gl,'Arial','perspective',0.1,[1 1 0 1],m * transfText);
             
-            transfText =  MTransform('T',[0.9 0 0.5]) * MTransform('R',-obj.cam(1:3),1);
+            transfText =  MTrans3D([0.9 0 0.5]) * MRot3D(-obj.cam(1:3),1);
             obj.text.Render(gl,'Arial','normal',0.1,[1 1 0 1],m * transfText);
             
-            transfText =  MTransform('T',single([10 10 0]));
+            transfText =  MTrans3D(single([10 10 0]));
             obj.text2.Render(gl,'Arial','ortho',18,[1 1 0 1],transfText);
             
             
@@ -119,7 +119,7 @@ classdef testgl3d < glCanvas
             gl.glViewport(0,0,newSz(1),newSz(2));
             
             % Update the projection matrix
-            m = MTransform('PA',[newSz(1)/newSz(2) 45 0.1 200],1);
+            m = MProj3D('F',[newSz(1)/newSz(2) 45 0.1 200],1);
             obj.shaders.SetMat4(gl,'default3','projection',single(m));
             obj.text.Reshape(obj.sz,0.1,200,45);
             obj.text2.Reshape(obj.sz,0,1);

@@ -16,12 +16,12 @@ switch type
         % scale, in=xyz
         M(1:5:12) = in;
     case 'P'
-        % perspective, in=[right top near far]
+        % perspective, in=[width height near far]
         % http://www.songho.ca/opengl/gl_projectionmatrix.html
         r=in(1)/2; t=in(2)/2; n=in(3); f=in(4);
         M([1 6 11 12 15 16]) = [n/r n/t (f+n)/(n-f) -1 2*f*n/(n-f) 0];
     case 'PA'
-        % perspective, in=[aspectRatio fov near far]
+        % perspective, in=[aspectRatio verticalFov near far]
         ar=in(1); fov=in(2); n=in(3); f=in(4);
         if degFlag, fov=fov/180*pi; end
         M([1 6 11 12 15 16]) = [1/(ar*tan(fov/2)) 1/tan(fov/2) (f+n)/(n-f) -1 2*f*n/(n-f) 0];
