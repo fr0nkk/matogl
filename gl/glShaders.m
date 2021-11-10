@@ -79,7 +79,6 @@ classdef glShaders < handle
                 error(['link error on ' id newline char(str.array')])
             end
             
-            
             obj.prog.(id) = PROG;
             
             f = sprintf('x%i',PROG);

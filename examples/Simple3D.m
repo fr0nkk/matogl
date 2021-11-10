@@ -1,4 +1,4 @@
-classdef testgl3d < glCanvas
+classdef Simple3D < glCanvas
     
     properties
         cam single = [-45 0 -135 0 0 -3]; % [rotation translation]
@@ -8,17 +8,16 @@ classdef testgl3d < glCanvas
         origin
         img
         text
-        text2
     end
     
     methods
-        function obj = testgl3d()
+        function obj = Simple3D()
             % create java frame
-            frame = jFrame('testgl3d',obj.sz);
+            frame = jFrame('Simple3D',obj.sz);
             
             obj.shaders = glShaders(fullfile(fileparts(mfilename('fullpath')),'shaders'));
             
-            % Initialize opengl in frame using GL4 profile
+            % Initialize opengl in frame using GL4 profile and multisample 4
             obj.Init(frame,'GL4',4);
             
             % activate callbacks
@@ -35,6 +34,7 @@ classdef testgl3d < glCanvas
             xyz = a([4 1 4 2 4 3],:)';
             color = a([1 1 2 2 3 3],:)';
             obj.origin = glElement(gl,{xyz,color},'default3',obj.shaders,gl.GL_LINES);
+
             im = imread('peppers.png');
             ijNorm = single([0 0;1 0;0 1;1 1]');
             pos = ijNorm./1.5+0.1;
@@ -42,7 +42,9 @@ classdef testgl3d < glCanvas
             obj.img.AddTexture(gl,0,gl.GL_TEXTURE_2D,im,gl.GL_RGB);
             
             obj.text = glText(gl,obj.shaders);
-            obj.text2 = glText(gl,obj.shaders);
+            obj.text.SetOrtho(0,1);
+            obj.text.SetPerspective(45,0.1,200);
+
             gl.glEnable(gl.GL_DEPTH_TEST);
             gl.glLineWidth(1.5);
             gl.glClearColor(0,0,0,0);
@@ -66,14 +68,13 @@ classdef testgl3d < glCanvas
             obj.origin.Draw(gl);
             
             transfText =  MTrans3D([0.9 0 0.8]) * MRot3D([90 0 180],1);
-            obj.text.Render(gl,'Arial','perspective',0.1,[1 1 0 1],m * transfText);
+            obj.text.Render3D(gl,'Arial','perspective',0.1,[1 1 0 1],m * transfText);
             
             transfText =  MTrans3D([0.9 0 0.5]) * MRot3D(-obj.cam(1:3),1);
-            obj.text.Render(gl,'Arial','normal',0.1,[1 1 0 1],m * transfText);
+            obj.text.Render3D(gl,'Arial','normal',0.1,[1 1 0 1],m * transfText);
             
             transfText =  MTrans3D(single([10 10 0]));
-            obj.text2.Render(gl,'Arial','ortho',18,[1 1 0 1],transfText);
-            
+            obj.text.Render2D(gl,'Arial','ortho',18,[1 1 0 1],transfText);
             
             % update display
             d.swapBuffers;
@@ -121,8 +122,7 @@ classdef testgl3d < glCanvas
             % Update the projection matrix
             m = MProj3D('F',[newSz(1)/newSz(2) 45 0.1 200],1);
             obj.shaders.SetMat4(gl,'default3','projection',single(m));
-            obj.text.Reshape(obj.sz,0.1,200,45);
-            obj.text2.Reshape(obj.sz,0,1);
+            obj.text.Reshape(newSz);
             
             % using UpdateFcn instead of Update since we already have d and gl
             obj.UpdateFcn(d,gl); 

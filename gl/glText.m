@@ -9,6 +9,10 @@ classdef glText < handle
         VAO
         shaders
         
+        sz
+        Pparams
+        Oparams
+        currentMode = ''
     end
     
     methods
@@ -32,13 +36,34 @@ classdef glText < handle
             obj.RR.enable(gl,0);
         end
         
-        function Reshape(obj,sz,near,far,ang)
+        function Reshape(obj,sz)
             sz = int32(sz);
-            if nargin < 5
-                obj.RR.reshapeOrtho(sz(1),sz(2),near,far);
-            else
-                obj.RR.reshapePerspective(ang,sz(1),sz(2),near,far);
+            obj.sz = {sz(1) sz(2)};
+            obj.currentMode = '';
+        end
+
+        function SetPerspective(obj,fov,near,far)
+            obj.Pparams = {fov near far};
+        end
+
+        function SetOrtho(obj,near,far)
+            obj.Oparams = {near far};
+        end
+
+        function Render2D(obj,varargin)
+            if ~strcmp(obj.currentMode,'O')
+                obj.RR.reshapeOrtho(obj.sz{:},obj.Oparams{:});
+                obj.currentMode = 'O';
             end
+            obj.Render(varargin{:});
+        end
+
+        function Render3D(obj,varargin)
+            if ~strcmp(obj.currentMode,'P')
+                obj.RR.reshapePerspective(obj.Pparams{1},obj.sz{:},obj.Pparams{2:3});
+                obj.currentMode = 'P';
+            end
+            obj.Render(varargin{:});
         end
         
         function Render(obj,gl,font,str,sz,rgba,transf)
@@ -52,12 +77,6 @@ classdef glText < handle
             gl.glBindVertexArray(obj.VAO);
             obj.RS.setColorStatic(rgba(1),rgba(2),rgba(3),rgba(4));
             F = obj.LoadedFont.(font);
-%             b = obj.newBuffer(str);
-            str = javabuffer(str);
-%             newLineCount = obj.TRU.getCharCount(str,newline);
-%             lineHeight = F.getLineHeight(sz);
-%             offsetX = -30 + F.getAdvanceWidth(int32('X'),sz);
-%             offsetY = 30 - lineHeight * newLineCount;
             M = obj.RR.getMatrix;
             M.glMatrixMode(M.GL_MODELVIEW);
             M.glLoadMatrixf(javabuffer(transf));
@@ -66,7 +85,7 @@ classdef glText < handle
             end
             pxSz = F.getPixelSize(sz,72);
             obj.RR.enable(gl,true);
-            obj.TRU.drawString3D(gl,obj.RR,F,pxSz,str,rgba,4);
+            obj.TRU.drawString3D(gl,obj.RR,F,pxSz,javabuffer(str),rgba,4);
             obj.RR.enable(gl,false);
             obj.shaders.lastProg = 0;
         end

@@ -1,4 +1,4 @@
-classdef gl3d < glCanvas
+classdef gl3DViewer < glCanvas
     
     properties
         figSize
@@ -8,7 +8,6 @@ classdef gl3d < glCanvas
         col
         idx
         cmap
-        style
         
         MView single
         MProj single
@@ -30,15 +29,12 @@ classdef gl3d < glCanvas
     end
     
     methods
-        function obj = gl3d(pos,col,cmap,T,style)
+        function obj = gl3DViewer(pos,col,cmap,T)
             if nargin < 2 || isempty(col)
                 col = floor(rescale(pos(:,3)).*255+1);
             end
             if nargin < 3 || isempty(cmap), cmap = parula(256); end
             if nargin < 4, T = []; end
-            if nargin < 5 || isempty(style)
-                if isempty(T), style = 'POINTS'; else, style = 'TRIANGLES'; end
-            end
 
             n = size(pos,1);
             col = UniformColor(col,n,cmap);
@@ -56,13 +52,12 @@ classdef gl3d < glCanvas
             end
             
             r = range(obj.pos);
-            obj.cam(6) = -max(r)*1.5;
+            obj.cam(6) = -max(r)*2;
 
             obj.cmap = cmap;
-            obj.style = style;
             
             obj.shaders = glShaders(fullfile(fileparts(mfilename('fullpath')),'shaders'));
-            obj.Init(jFrame('GL pcviewer'),'GL4');
+            obj.Init(jFrame('GL 3D Viewer'),'GL4');
             
             obj.setMethodCallback('MousePressed')
             obj.setMethodCallback('MouseReleased')
@@ -75,8 +70,8 @@ classdef gl3d < glCanvas
         end
         
         function InitFcn(obj,d,gl)
-            glStyle = ['GL_' obj.style];
-            obj.points = glElement(gl,{obj.pos',obj.col'},'pointcloud',obj.shaders,gl.(glStyle),gl.GL_STATIC_DRAW,[gl.GL_FALSE gl.GL_TRUE]);
+            if isempty(obj.idx), drawMode = 'GL_POINTS'; else, drawMode = 'GL_TRIANGLES'; end
+            obj.points = glElement(gl,{obj.pos',obj.col'},'pointcloud',obj.shaders,gl.(drawMode),gl.GL_STATIC_DRAW,[gl.GL_FALSE gl.GL_TRUE]);
 
             if ~isempty(obj.idx)
                 obj.points.SetIndex(gl,obj.idx');
@@ -232,7 +227,7 @@ classdef gl3d < glCanvas
             WC = WC(1:3)'./WC(4);
             
             if ~any(isnan(WC))
-                obj.origin.uni.Mat4.model = MTransform('T',WC);
+                obj.origin.uni.Mat4.model = MTrans3D(WC);
                 p = WC;
             end
         end
@@ -283,7 +278,7 @@ function c = UniformColor(c,n,cmap)
     if size(c,2) == 1
         % colormap
         cmap = single(cmap);
-        c = uint8(cmap(c,:).*255);
+        c = uint8(cmap(round(c),:).*255);
     else
         % color
         if ~isinteger(c)
