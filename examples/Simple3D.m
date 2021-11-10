@@ -3,7 +3,7 @@ classdef Simple3D < glCanvas
     properties
         cam single = [-45 0 -135 0 0 -3]; % [rotation translation]
         click struct = struct('ij',[0 0],'cam',[0 0 0 0 0 0],'button',0);
-        sz single = [500 450];
+        sz single = [600 450];
         shaders
         origin
         img
