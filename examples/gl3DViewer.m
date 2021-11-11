@@ -232,10 +232,12 @@ classdef gl3DViewer < glCanvas
             end
         end
         
-        function setFocus(obj,p)
-            if isempty(p), return, end
-            obj.cam(4:6) = obj.cam(4:6) + (p-obj.cam(7:9))*MRot(obj.cam(1:3),1,1)';
-            obj.cam(7:9) = p;
+        function setFocus(obj,worldCoord)
+            if isempty(worldCoord), return, end
+            M =  MTrans3D(obj.cam(4:6)) * MRot3D(obj.cam(1:3),1,[1 3]);
+            camTranslate = M * [worldCoord-obj.cam(7:9) 1]';
+            obj.cam(4:6) = camTranslate(1:3);
+            obj.cam(7:9) = worldCoord;
         end
         
         function MouseDragged(obj,src,evt)
