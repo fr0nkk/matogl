@@ -6,7 +6,6 @@ classdef glElement < handle
     end
     
     properties(Hidden)
-%         jh
         shaders
         SZ
         VBO int32
@@ -25,7 +24,6 @@ classdef glElement < handle
     
     methods
         function obj = glElement(gl,data,prog,shaders,primitiveType,drawType,normFlag,AttribIFlag)
-%             obj.jh = mglJavaHelper;
             obj.shaders = shaders;
             % data must be in the size [nbValuesPerVertex x nbVertex] (example: [2 x 10] for 10 2d points)
             if ~iscell(data), data={data}; end
@@ -40,7 +38,7 @@ classdef glElement < handle
             obj.DRAWTYPE = drawType;
             if ischar(primitiveType), primitiveType = gl.(primitiveType); end
             obj.PRIM = primitiveType;
-%             if ischar(prog), prog = shaders.Init(gl,prog); end
+            
             obj.PROG = shaders.Valid(gl,prog);
             sz = cellfun(@size,data,'uni',0);
             obj.SZ = vertcat(sz{:});
@@ -75,7 +73,7 @@ classdef glElement < handle
             if nargin < 8, magFilter = gl.GL_LINEAR; end
             if nargin < 9, wrapS = gl.GL_REPEAT; end
             if nargin < 10, wrapT = gl.GL_REPEAT; end
-%             obj.jh = mglJavaHelper;
+
             obj.TEX(i+1) = glGenBuffer(@gl.glGenTextures,1);
             obj.TEXTYPE(i+1) = texType;
             
@@ -98,7 +96,7 @@ classdef glElement < handle
                     b = data{i};
                     if ~obj.bufferElemSz(i)
                         error('todo')
-                        % find endsWith extractAfter obj.jh.equivTypes class(b)
+                        % find endsWith extractAfter javatype class(b)
                     end
                 else
                     [b,obj.bufferElemSz(i)] = javabuffer(data{i});
@@ -142,27 +140,20 @@ classdef glElement < handle
             
         end
         
-        function SetIndex(obj,gl,i)
+        function SetIndex(obj,gl,idx)
             if isempty(obj.VBOi)
                 obj.VBOi = glGenBuffer(@gl.glGenBuffers,1);
             end
             gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, obj.VBOi);
-            [b,esz] = javabuffer(int32(i-1));
-            obj.ni = numel(i);
+            [b,esz] = javabuffer(uint32(idx));
+            obj.ni = numel(idx);
             gl.glBufferData(gl.GL_ELEMENT_ARRAY_BUFFER, esz*obj.ni,b,gl.GL_STATIC_DRAW);
         end
         
-%         function SetInstances(obj,first,count,n)
-%             
-%         end
-        
         function Draw(obj,gl)
-%             tic
             if obj.show
-%                 gl.glUseProgram(obj.PROG);
                 obj.shaders.UseProg(gl,obj.PROG);
                 obj.shaders.SetProgUni(gl,obj.PROG,obj.uni)
-%                 obj.SetUni(gl);
                 obj.SetTex(gl);
                 gl.glBindVertexArray(obj.VAO);
                 if isempty(obj.VBOi)
@@ -172,7 +163,6 @@ classdef glElement < handle
                     gl.glDrawElements(obj.PRIM,obj.ni,gl.GL_UNSIGNED_INT,0);
                 end
             end
-%             toc
         end
         
         function SetTex(obj,gl)

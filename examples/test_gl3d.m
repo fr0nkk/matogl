@@ -1,15 +1,21 @@
-n = 100;
-a = linspace(0,1,2*n+1);
-[X,Y] = ndgrid(a,a);
-Z = membrane(1,n);
-pos = single([X(:) Y(:) Z(:)]);
-T = delaunay(X(:),Y(:));
+% load bunny
+data = readply('bun_zipper.ply');
+loc = getfields(data.vertex,2,'x','y','z');
+faces = vertcat(data.face{:});
 
-gl3DViewer(pos,[1 1 1]);
-
-gl3DViewer(pos,[],jet(256),T);
-
-[loc,faces] = plyRead('bun_zipper.ply',1);
+% make bunny upright (Z up)
 M = MRot3D([-90 0 0],1);
 loc = loc * M(1:3,1:3);
-gl3DViewer(loc,[],[],faces);
+
+% point cloud, auto color (scaled on Z)
+% gl3DViewer(loc);
+
+% mesh view, white
+% gl3DViewer(loc,[1 1 1],faces);
+
+% mesh view, confidence gray scale
+% gl3DViewer(loc,data.vertex.confidence,faces);
+
+% meshview, auto color
+gl3DViewer(loc,[],faces);
+

@@ -13,7 +13,7 @@ classdef glCanvas < javacallbackmanager
     end
     
     methods(Sealed=true)
-        function Init(obj, frame, glProfile, multisample)
+        function Init(obj, frame, glProfile, multisample, varargin)
             import com.jogamp.opengl.*;
             if nargin < 4, multisample = 0; end
             obj.frame = frame;
@@ -32,7 +32,7 @@ classdef glCanvas < javacallbackmanager
             
             obj.populateCallbacks(obj.gc);
             frame.setCallback('WindowClosed',@(~,~) obj.delete);
-            obj.glFcn(@obj.InitFcn);
+            obj.glFcn(@obj.InitFcn,varargin{:});
         end
         
         function varargout = glFcn(obj,fcn,varargin)

@@ -4,10 +4,9 @@ classdef gl3DViewer < glCanvas
         figSize
         pos0 % mean of point locations
         
-        pos
-        col
-        idx
-        cmap
+%         pos
+%         col
+%         idx
         
         MView single
         MProj single
@@ -29,15 +28,16 @@ classdef gl3DViewer < glCanvas
     end
     
     methods
-        function obj = gl3DViewer(pos,col,cmap,T)
+        function obj = gl3DViewer(pos,col,idx)
             if nargin < 2 || isempty(col)
                 col = floor(rescale(pos(:,3)).*255+1);
+                cmap = jet(256);
+                col = cmap(col,:);
             end
-            if nargin < 3 || isempty(cmap), cmap = parula(256); end
-            if nargin < 4, T = []; end
+            if nargin < 3, idx = []; end
 
             n = size(pos,1);
-            col = UniformColor(col,n,cmap);
+            col = UniformColor(col,n);
 
             assert(isa(col,'uint8'),'Invalid color data');
             assert(size(pos,2)==3,'Location size must be [n x 3]');
@@ -45,19 +45,10 @@ classdef gl3DViewer < glCanvas
             assert(size(pos,1)==size(col,1),'Location and color are not the same length');
             
             obj.pos0 = mean(pos,1,'omitnan');
-            obj.pos = single(double(pos) - double(obj.pos0));
-            obj.col = col;
-            if nargin >= 4
-                obj.idx = T;
-            end
-            
-            r = range(obj.pos);
-            obj.cam(6) = -max(r)*2;
-
-            obj.cmap = cmap;
+            pos = single(double(pos) - double(obj.pos0));            
             
             obj.shaders = glShaders(fullfile(fileparts(mfilename('fullpath')),'shaders'));
-            obj.Init(jFrame('GL 3D Viewer'),'GL4');
+            obj.Init(jFrame('GL 3D Viewer'),'GL4',0,pos,col,idx);
             
             obj.setMethodCallback('MousePressed')
             obj.setMethodCallback('MouseReleased')
@@ -69,20 +60,22 @@ classdef gl3DViewer < glCanvas
             obj.Update;
         end
         
-        function InitFcn(obj,d,gl)
-            if isempty(obj.idx), drawMode = 'GL_POINTS'; else, drawMode = 'GL_TRIANGLES'; end
-            obj.points = glElement(gl,{obj.pos',obj.col'},'pointcloud',obj.shaders,gl.(drawMode),gl.GL_STATIC_DRAW,[gl.GL_FALSE gl.GL_TRUE]);
-
-            if ~isempty(obj.idx)
-                obj.points.SetIndex(gl,obj.idx');
+        function InitFcn(obj,d,gl,pos,col,idx)
+            if isempty(idx), drawMode = 'GL_POINTS'; else, drawMode = 'GL_TRIANGLES'; end
+            obj.points = glElement(gl,{pos',col'},'pointcloud',obj.shaders,gl.(drawMode),gl.GL_STATIC_DRAW,[gl.GL_FALSE gl.GL_TRUE]);
+            
+            if ~isempty(idx)
+                obj.points.SetIndex(gl,idx');
             end
             
             obj.points.uni.Mat4.model = eye(4,'single');
 
-            temppos = single([0 0 0 ; 1 0 0 ; 0 0 0 ; 0 1 0 ; 0 0 0 ; 0 0 1]');
-            tempcol = single([1 0 0 ; 1 0 0 ; 0 1 0 ; 0 1 0 ; 0 0 1 ; 0 0 1]');
-            obj.origin = glElement(gl,{temppos,tempcol},'pointcloud',obj.shaders,gl.GL_LINES);
-%             obj.origin.uni.Int1.info_type = 1;
+            r = max(pos) - min(pos);
+            obj.cam(6) = -max(r)*2;
+
+            origin_pos = single([0 0 0 ; 1 0 0 ; 0 0 0 ; 0 1 0 ; 0 0 0 ; 0 0 1]');
+            origin_col = single([1 0 0 ; 1 0 0 ; 0 1 0 ; 0 1 0 ; 0 0 1 ; 0 0 1]');
+            obj.origin = glElement(gl,{origin_pos,origin_col},'pointcloud',obj.shaders,gl.GL_LINES);
             obj.origin.uni.Mat4.model = eye(4,'single');
             
             quadVert = single([-1 -1 0 0; -1 1 0 1; 1 -1 1 0; 1 1 1 1]');
@@ -129,20 +122,14 @@ classdef gl3DViewer < glCanvas
                 
                 obj.MView = MTrans3D(obj.cam(4:6)) * MRot3D(obj.cam(1:3),1,[1 3]) * MTrans3D(-obj.cam(7:9));
                 obj.shaders.SetMat4(gl,'pointcloud','view',obj.MView);
-%                 mVP = mP*mV;
-                
-%                 mR = MTransform('R',[0 46 -71],1)';
-%                 obj.shaders.SetMat4(gl,'pointcloud','view',single(mVP));
+
                 if obj.click.button
                     obj.origin.Draw(gl);
                 end
                 obj.screen.UseFramebuffer(gl);
-%                     gl.glEnable(gl.GL_MULTISAMPLE);
+
                 gl.glEnable(gl.GL_DEPTH_TEST);
 
-%                     obj.points.EditData(gl,obj.bposcol(i,:),true)
-%                     obj.shaders.SetFloat1(gl,'pointcloud','info_idx',i);
-%                     obj.shaders.SetInt1(gl,'pointcloud','info_idx',i);
                 obj.points.Draw(gl);
                 
                 gl.glBindFramebuffer(gl.GL_FRAMEBUFFER,0);
@@ -276,25 +263,22 @@ classdef gl3DViewer < glCanvas
     end
 end
 
-function c = UniformColor(c,n,cmap)
+function c = UniformColor(c,n)
     if size(c,2) == 1
-        % colormap
-        cmap = single(cmap);
-        c = uint8(cmap(round(c),:).*255);
-    else
-        % color
-        if ~isinteger(c)
-            c = uint8(c.*255);
-        end
+        % gray tones
+        c = repmat(c,1,3);
+    end
+    % color
+    if ~isinteger(c)
+        c = uint8(c.*255);
+    end
 
-        if ~isa(c,'uint8')
-            c = uint8(single(c)./single(c(1)+inf).*255);
-        end
+    if ~isa(c,'uint8')
+        c = uint8(single(c)./single(c(1)+inf).*255);
     end
 
     if size(c,1) == 1
         c = repmat(c,n,1);
     end
-
 end
 
