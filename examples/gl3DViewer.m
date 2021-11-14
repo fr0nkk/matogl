@@ -1,30 +1,46 @@
 classdef gl3DViewer < glCanvas
+    % View point cloud or meshes with opengl render
+    % gl3DViewer(pos) : view point cloud with color scaled on Z coords
+    %   pos must be [n x 3] where n is the number of points
+    % gl3DViewer(pos,col) : view point cloud with user set color
+    %   col can be:
+    %     [n x 1] : color will be gray scale
+    %     [n x 3] : each point will have its RGB color
+    %     [1 x 3] : every point will have the same RGB color
+    %     [] (empty): same as gl3DViewer(pos)
+    %     floating point range: 0 to 1
+    %     integer range: 0 to intmax
+    % gl3DViewer(pos,col,idx)
+    %    idx is the triangle list, in point indices (starting at 0)
+    %      if using matlab functions like delaunay(), use (idx-1)
+    %
+    % Left click: rotate
+    % Right click: translate
+    % scroll wheel: zoom
+    % ctrl + left click: display clicked coords in console
+    %   *clicked coords are not 100% accurate since they are recalculated
+    %   from the inverse projection.
     
     properties
         figSize
         pos0 % mean of point locations
         
-%         pos
-%         col
-%         idx
-        
         MView single
         MProj single
         
         shaders
+
         points
         origin
         screen
         
         % rotation translation orbitcenter
         cam = [-45 0 -45 0 0 -1 0 0 0];
-        click = struct('button',0)
+        click = struct('button',0,'coords',[0 0],'cam',[0 0 0 0 0 -1 0 0 0])
         
         clearFlag
         
-        updateNeeded = 0;
         resizeNeeded = 0;
-        updating = 0;
     end
     
     methods
@@ -97,54 +113,41 @@ classdef gl3DViewer < glCanvas
         end
         
         function UpdateFcn(obj,d,gl)
-            obj.updateNeeded = 1;
-            if obj.updating, return, end
-            obj.updating = 1; temp = onCleanup(@() obj.EndUpdate);
-            while obj.updateNeeded
-%                 tic
-                if obj.resizeNeeded
-                    obj.ResizeFcn(d,gl);
-                    obj.resizeNeeded=0;
-                end
-                
-                obj.updateNeeded = 0;
-                obj.screen.UseFramebuffer(gl);
-                gl.glEnable(gl.GL_DEPTH_TEST);
-
-                gl.glClear(obj.clearFlag);
-                
-                near = clamp(-obj.cam(6)/10,0.01,1);
-                far = clamp(-obj.cam(6)*10,10,1e6);
-                
-                s = obj.figSize;
-                obj.MProj = MProj3D('P',[[s/mean(s) 1].*near far]);
-                obj.shaders.SetMat4(gl,'pointcloud','projection',obj.MProj);
-                
-                obj.MView = MTrans3D(obj.cam(4:6)) * MRot3D(obj.cam(1:3),1,[1 3]) * MTrans3D(-obj.cam(7:9));
-                obj.shaders.SetMat4(gl,'pointcloud','view',obj.MView);
-
-                if obj.click.button
-                    obj.origin.Draw(gl);
-                end
-                obj.screen.UseFramebuffer(gl);
-
-                gl.glEnable(gl.GL_DEPTH_TEST);
-
-                obj.points.Draw(gl);
-                
-                gl.glBindFramebuffer(gl.GL_FRAMEBUFFER,0);
-                gl.glDisable(gl.GL_DEPTH_TEST);
-                gl.glClear(gl.GL_COLOR_BUFFER_BIT);
-                obj.screen.Draw(gl);
-                
-                d.swapBuffers;
-                [d,gl] = obj.glDrawnow;
-%                 1/toc
+            if obj.resizeNeeded
+                obj.ResizeFcn(d,gl);
+                obj.resizeNeeded=0;
             end
-        end
-        
-        function EndUpdate(obj)
-            obj.updating = 0;
+            
+            obj.screen.UseFramebuffer(gl);
+            gl.glEnable(gl.GL_DEPTH_TEST);
+
+            gl.glClear(obj.clearFlag);
+            
+            near = clamp(-obj.cam(6)/10,0.01,1);
+            far = clamp(-obj.cam(6)*10,10,1e6);
+            
+            s = obj.figSize;
+            obj.MProj = MProj3D('P',[[s/mean(s) 1].*near far]);
+            obj.shaders.SetMat4(gl,'pointcloud','projection',obj.MProj);
+            
+            obj.MView = MTrans3D(obj.cam(4:6)) * MRot3D(obj.cam(1:3),1,[1 3]) * MTrans3D(-obj.cam(7:9));
+            obj.shaders.SetMat4(gl,'pointcloud','view',obj.MView);
+
+            if obj.click.button
+                obj.origin.Draw(gl);
+            end
+            obj.screen.UseFramebuffer(gl);
+
+            gl.glEnable(gl.GL_DEPTH_TEST);
+
+            obj.points.Draw(gl);
+            
+            gl.glBindFramebuffer(gl.GL_FRAMEBUFFER,0);
+            gl.glDisable(gl.GL_DEPTH_TEST);
+            gl.glClear(gl.GL_COLOR_BUFFER_BIT);
+            obj.screen.Draw(gl);
+            
+            d.swapBuffers;
         end
         
         function ResizeFcn(obj,d,gl)
@@ -162,18 +165,14 @@ classdef gl3DViewer < glCanvas
         
         function MousePressed(obj,src,evt)
             obj.click.button = evt.getButton;
-            if evt.getButton == 3
-%                 obj.stopUpdate = 1;
-            else
-                c = [evt.getX evt.getY];
-                obj.click.coords = c;
-                p = obj.glFcn(@obj.glGetPoint,c);
-                if evt.getModifiers == 18 && ~isempty(p)
-                    fprintf('Point coords: %.3f, %.3f, %.3f\n',double(p)+obj.pos0);
-                end
-                obj.setFocus(p);
-                obj.click.cam = obj.cam;
+            c = [evt.getX evt.getY];
+            obj.click.coords = c;
+            p = obj.glFcn(@obj.glGetPoint,c);
+            if evt.getModifiers == 18 && ~isempty(p) % ctrl pressed
+                fprintf('Point coords: %.3f, %.3f, %.3f\n',double(p)+obj.pos0);
             end
+            obj.setFocus(p);
+            obj.click.cam = obj.cam;
             obj.Update
         end
         
@@ -233,8 +232,8 @@ classdef gl3DViewer < glCanvas
                 case 1
                     % rotation 0.2 deg/pixel
                     obj.cam([3 1]) = obj.click.cam([3 1])+dcoords/5;
-                case 2
-                    % 
+                case 3
+                    % translate
                     obj.cam([4 5]) = obj.click.cam([4 5])+dcoords.*[-1 1]./mean(obj.figSize).*obj.click.cam(6);
                 otherwise
                     return

@@ -1,7 +1,8 @@
 classdef javacallbackmanager < handle
-    % helper functions for interfacing with java object callbacks
-    % do not forget to rmCallback() before deleting concerned objects or
-    % they will stay in memory and 'clear classes' will fail
+    % Helper functions for interfacing with java object callbacks.
+    % Do not forget to rmCallback() before deleting concerned objects or
+    % they will stay in memory and 'clear classes' will fail.
+    % Can be set as superclass or as standalone property
     properties(Hidden)
         callback_list
     end

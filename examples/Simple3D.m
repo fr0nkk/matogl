@@ -4,9 +4,12 @@ classdef Simple3D < glCanvas
         cam single = [-45 0 -135 0 0 -3]; % [rotation translation]
         click struct = struct('ij',[0 0],'cam',[0 0 0 0 0 0],'button',0);
         sz single = [600 450];
+
         shaders
+        
         origin
-        img
+        img2D
+        img3D
         text
     end
     
@@ -33,13 +36,19 @@ classdef Simple3D < glCanvas
             a = eye(4,3,'single');
             xyz = a([4 1 4 2 4 3],:)';
             color = a([1 1 2 2 3 3],:)';
-            obj.origin = glElement(gl,{xyz,color},'default3',obj.shaders,gl.GL_LINES);
+            obj.origin = glElement(gl,{xyz,color},'example1',obj.shaders,gl.GL_LINES);
 
-            im = imread('peppers.png');
+            im = imread('ngc6543a.jpg');
             ijNorm = single([0 0;1 0;0 1;1 1]');
-            pos = ijNorm./1.5+0.1;
-            obj.img = glElement(gl,{pos,ijNorm},'image',obj.shaders,gl.GL_TRIANGLE_STRIP);
-            obj.img.AddTexture(gl,0,gl.GL_TEXTURE_2D,im,gl.GL_RGB);
+            pos = ijNorm./1.5+0.1; pos(3,:) = 0;
+            obj.img2D = glElement(gl,{pos,ijNorm},'example2',obj.shaders,gl.GL_TRIANGLE_STRIP);
+            obj.img2D.AddTexture(gl,0,gl.GL_TEXTURE_2D,im,gl.GL_RGB);
+            obj.shaders.SetInt1(gl,'example2','texture1',0);
+            
+            obj.shaders.Init(gl,'example2','image2');
+            obj.img3D = glElement(gl,{pos,ijNorm},'image2',obj.shaders,gl.GL_TRIANGLE_STRIP);
+            obj.img3D.AddTexture(gl,1,gl.GL_TEXTURE_2D,'peppers.png',gl.GL_RGB);
+            obj.shaders.SetInt1(gl,'image2','texture1',1);
             
             obj.text = glText(gl,obj.shaders);
             obj.text.SetOrtho(0,1);
@@ -62,9 +71,11 @@ classdef Simple3D < glCanvas
             % make the view transform matrix and set it in the shader
             m = MTrans3D(obj.cam(4:6)) * MRot3D(obj.cam(1:3),1,[1 3]);
             
-            obj.shaders.SetMat4(gl,'default3','view',m);
+            obj.shaders.SetMat4(gl,'example1','view',m);
+            obj.shaders.SetMat4(gl,'image2','view',m);
             
-            obj.img.Draw(gl);
+            obj.img2D.Draw(gl);
+            obj.img3D.Draw(gl);
             obj.origin.Draw(gl);
             
             transfText =  MTrans3D([0.9 0 0.8]) * MRot3D([90 0 180],1);
@@ -101,14 +112,14 @@ classdef Simple3D < glCanvas
                 otherwise
                     return
             end
-            obj.Update; % shortcut for obj.glFcn(@obj.Update)
+            obj.Update;
         end
         
         function MouseWheelMoved(obj,~,evt)
             % scroll wheel: zoom
             z = evt.getUnitsToScroll / 50;
             obj.cam(4:6) = obj.cam(4:6)+obj.cam(4:6).*z;
-            obj.Update; % shortcut for obj.glFcn(@obj.Update)
+            obj.Update;
         end
         
         function glResize(obj,d,gl)
@@ -121,7 +132,9 @@ classdef Simple3D < glCanvas
             
             % Update the projection matrix
             m = MProj3D('F',[newSz(1)/newSz(2) 45 0.1 200],1);
-            obj.shaders.SetMat4(gl,'default3','projection',single(m));
+            obj.shaders.SetMat4(gl,'example1','projection',single(m));
+            obj.shaders.SetMat4(gl,'image2','projection',single(m));
+
             obj.text.Reshape(newSz);
             
             % using UpdateFcn instead of Update since we already have d and gl

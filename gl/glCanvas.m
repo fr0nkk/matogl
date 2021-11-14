@@ -6,6 +6,9 @@ classdef glCanvas < javacallbackmanager
         frame % matlab jFrame
         gc % com.jogamp.opengl.awt.GLCanvas
         glStop logical = 0;
+        autoCheckError = 1;
+        updateNeeded = 0;
+        updating = 0;
     end
     
     properties(Access=private)
@@ -42,6 +45,10 @@ classdef glCanvas < javacallbackmanager
             [d,gl,temp] = obj.getContext; %#ok<ASGLU> 
             [varargout{1:nargout}] = fcn(d,gl,varargin{:});
             if obj.glStop, return, end
+            if obj.autoCheckError, obj.CheckError(gl); end
+        end
+
+        function CheckError(obj,gl)
             err = gl.glGetError();
             if err
                 warning(['GL Error 0x' dec2hex(err,4)]);
@@ -49,6 +56,8 @@ classdef glCanvas < javacallbackmanager
         end
 
         function [d,gl,temp] = getContext(obj)
+            % always request temp. This ensures that the context is
+            % released when temp is cleared.
             obj.context = obj.gc.getContext;
             if ~obj.context.isCurrent
                 obj.context.makeCurrent;
@@ -76,7 +85,27 @@ classdef glCanvas < javacallbackmanager
         end
         
         function Update(obj)
-            obj.glFcn(@obj.UpdateFcn);
+            % java events (like mouse drag) can happen so quickly that the
+            % update rate doesn't follow. This strategy skips updates that
+            % happen before a previous a previous update had time to finish
+            % while ensuring that the last update requested is always ran.
+            obj.updateNeeded = 1;
+            if obj.updating || obj.glStop
+                return
+            end
+            obj.updating = 1; temp1 = onCleanup(@() obj.EndUpdate);
+            [d,gl,temp2] = getContext(obj); %#ok<ASGLU> temp2 is onCleanup()
+            while obj.updateNeeded
+                obj.UpdateFcn(d,gl);
+                obj.updateNeeded = 0;
+                [d,gl] = obj.glDrawnow;
+                if obj.glStop, return, end
+            end
+            if obj.autoCheckError, obj.CheckError(gl); end
+        end
+
+        function EndUpdate(obj)
+            obj.updating = 0;
         end
     end
     
@@ -93,8 +122,8 @@ classdef glCanvas < javacallbackmanager
     methods(Abstract)
         % d is the GLDrawable
         % gl is the GL object
-        UpdateFcn(obj,d,gl)
-        InitFcn(obj,d,gl)
+        UpdateFcn(obj,d,gl,varargin)
+        InitFcn(obj,d,gl,varargin)
     end
 end
 
