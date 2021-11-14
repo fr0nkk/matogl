@@ -1,6 +1,7 @@
 % show peaks function - 250k points
 [X,Y,Z] = peaks(500);
 coords = [X(:) Y(:) Z(:)];
+clear X Y Z
 T = delaunay(coords(:,1:2));
 gl3DViewer(coords,[],T-1); % (T-1) : make triangle indices start at 0
 
