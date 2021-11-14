@@ -26,7 +26,6 @@ classdef Simple3D < glCanvas
             obj.setMethodCallback('MousePressed');
             obj.setMethodCallback('MouseDragged');
             obj.setMethodCallback('MouseWheelMoved');
-            obj.setCallback('ComponentResized',@(src,evt) obj.glFcn(@obj.glResize));
         end
         
         function InitFcn(obj,d,gl)
@@ -72,7 +71,6 @@ classdef Simple3D < glCanvas
             gl.glEnable(gl.GL_DEPTH_TEST);
             gl.glClearColor(0,0,0,0);
             
-            obj.glResize(d,gl);
         end
         
         function UpdateFcn(obj,d,gl)
@@ -137,7 +135,7 @@ classdef Simple3D < glCanvas
             obj.Update;
         end
         
-        function glResize(obj,d,gl)
+        function ResizeFcn(obj,d,gl)
             % new canvas size
             newSz = [obj.gc.getWidth,obj.gc.getHeight];
             obj.sz = newSz;
@@ -150,10 +148,7 @@ classdef Simple3D < glCanvas
             obj.shaders.SetMat4(gl,'example1','projection',single(m));
             obj.shaders.SetMat4(gl,'image2','projection',single(m));
             
-            obj.text.Reshape(newSz);
-            
-            % using UpdateFcn instead of Update since we already have d and gl
-            obj.UpdateFcn(d,gl); 
+            obj.text.Reshape(newSz); 
         end
         
         

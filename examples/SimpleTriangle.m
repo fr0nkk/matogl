@@ -1,19 +1,18 @@
 classdef SimpleTriangle < glCanvas
     
     properties
-        title = 'SimpleTriangle';
+        
     end
     
     methods
         function obj = SimpleTriangle()
-            frame = jFrame(obj.title,[600 450]);
+            frame = jFrame('SimpleTriangle',[600 450]);
             obj.Init(frame,'GL2');
             obj.setMethodCallback('ComponentResized');
         end
         
         function InitFcn(obj,d,gl)
             gl.glClearColor(0,0,0,1);
-            obj.UpdateFcn(d,gl);
         end
 
         function UpdateFcn(obj,d,gl)
@@ -31,10 +30,8 @@ classdef SimpleTriangle < glCanvas
             d.swapBuffers;
         end
 
-        function ComponentResized(obj,src,evt)
-            [d,gl,temp] = obj.getContext;
-            gl.glViewport(0,0,src.getWidth,src.getHeight);
-            obj.UpdateFcn(d,gl);
+        function ResizeFcn(obj,d,gl)
+            gl.glViewport(0,0,obj.gc.getWidth,obj.gc.getHeight);
         end
     end
 end

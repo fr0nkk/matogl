@@ -39,8 +39,6 @@ classdef gl3DViewer < glCanvas
         click = struct('button',0,'coords',[0 0],'cam',[0 0 0 0 0 -1 0 0 0])
         
         clearFlag
-        
-        resizeNeeded = 0;
     end
     
     methods
@@ -70,10 +68,8 @@ classdef gl3DViewer < glCanvas
             obj.setMethodCallback('MouseReleased')
             obj.setMethodCallback('MouseDragged')
             obj.setMethodCallback('MouseWheelMoved')
-            obj.setMethodCallback('ComponentResized')
             obj.frame.setCallback('WindowClosing',@obj.WindowClosing);
             
-            obj.Update;
         end
         
         function InitFcn(obj,d,gl,pos,col,idx)
@@ -105,19 +101,13 @@ classdef gl3DViewer < glCanvas
             
             gl.glClearColor(0,0,0,0);
             
-            obj.figSize = [obj.gc.getWidth,obj.gc.getHeight];
-            
             obj.ResizeFcn(d,gl);
             
             obj.screen.SetFramebuffer(gl,gl.GL_DEPTH_ATTACHMENT);
         end
         
         function UpdateFcn(obj,d,gl)
-            if obj.resizeNeeded
-                obj.ResizeFcn(d,gl);
-                obj.resizeNeeded=0;
-            end
-            
+
             obj.screen.UseFramebuffer(gl);
             gl.glEnable(gl.GL_DEPTH_TEST);
 
@@ -151,7 +141,8 @@ classdef gl3DViewer < glCanvas
         end
         
         function ResizeFcn(obj,d,gl)
-            sz = obj.figSize;
+            sz = [obj.gc.getWidth,obj.gc.getHeight];
+            obj.figSize = sz;
             
             obj.screen.EditTex(gl,0,{0,gl.GL_RGB,sz(1),sz(2),0,gl.GL_RGB,gl.GL_UNSIGNED_BYTE,[]});
             obj.screen.EditTex(gl,1,{0,gl.GL_RGBA32F,sz(1),sz(2),0,gl.GL_RGBA,gl.GL_FLOAT,[]});
@@ -160,7 +151,6 @@ classdef gl3DViewer < glCanvas
             gl.glViewport(0,0,sz(1),sz(2));
             
             obj.shaders.SetVec2(gl,'screen','scrSz',single(sz));
-            
         end
         
         function MousePressed(obj,src,evt)
@@ -246,12 +236,6 @@ classdef gl3DViewer < glCanvas
             p = obj.glFcn(@obj.glGetPoint,[evt.getX evt.getY]);
             obj.setFocus(p);
             obj.cam(4:6) = obj.cam(4:6)+obj.cam(4:6).*s;
-            obj.Update;
-        end
-        
-        function ComponentResized(obj,src,evt)
-            obj.figSize = [obj.gc.getWidth,obj.gc.getHeight];
-            obj.resizeNeeded = 1;
             obj.Update;
         end
         

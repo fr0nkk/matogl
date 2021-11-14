@@ -8,6 +8,7 @@ classdef glCanvas < javacallbackmanager
         glStop logical = 0;
         autoCheckError = 1;
         updateNeeded = 0;
+        resizeNeeded = 1;
         updating = 0;
     end
     
@@ -36,6 +37,8 @@ classdef glCanvas < javacallbackmanager
             obj.populateCallbacks(obj.gc);
             frame.setCallback('WindowClosed',@(~,~) obj.delete);
             obj.glFcn(@obj.InitFcn,varargin{:});
+            obj.setMethodCallback('ComponentResized');
+            obj.Update;
         end
         
         function varargout = glFcn(obj,fcn,varargin)
@@ -96,6 +99,10 @@ classdef glCanvas < javacallbackmanager
             obj.updating = 1; temp1 = onCleanup(@() obj.EndUpdate);
             [d,gl,temp2] = getContext(obj); %#ok<ASGLU> temp2 is onCleanup()
             while obj.updateNeeded
+                if obj.resizeNeeded
+                    obj.resizeNeeded = 0;
+                    obj.ResizeFcn(d,gl);
+                end
                 obj.UpdateFcn(d,gl);
                 obj.updateNeeded = 0;
                 [d,gl] = obj.glDrawnow;
@@ -106,6 +113,11 @@ classdef glCanvas < javacallbackmanager
 
         function EndUpdate(obj)
             obj.updating = 0;
+        end
+
+        function ComponentResized(obj,src,evt)
+            obj.resizeNeeded = 1;
+            obj.Update;
         end
     end
     
@@ -122,8 +134,9 @@ classdef glCanvas < javacallbackmanager
     methods(Abstract)
         % d is the GLDrawable
         % gl is the GL object
-        UpdateFcn(obj,d,gl,varargin)
         InitFcn(obj,d,gl,varargin)
+        UpdateFcn(obj,d,gl)
+        ResizeFcn(obj,d,gl);
     end
 end
 
