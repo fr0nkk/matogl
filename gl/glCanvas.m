@@ -88,7 +88,7 @@ classdef glCanvas < javacallbackmanager
             % java events (like mouse drag) can happen so quickly that the
             % update rate doesn't follow. This strategy skips updates that
             % happen before a previous a previous update had time to finish
-            % while ensuring that the last update requested is always ran.
+            % while ensuring that the last update requested is always run.
             obj.updateNeeded = 1;
             if obj.updating || obj.glStop
                 return

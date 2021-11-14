@@ -127,6 +127,7 @@ classdef glElement < handle
                         data = imread(data);
                     end
                     if isfloat(data)
+                        % float 0 to 1
                         data = uint8(data.*255);
                     end
                     sz = size(data);

@@ -19,19 +19,7 @@ classdef glShaders < handle
     
     methods
         function obj = glShaders(shaderPath)
-            if nargin < 1
-                shaderPath = fullfile(fileparts(mfilename('fullpath')),'shaders');
-            end
             obj.shaderPath = shaderPath;
-        end
-        
-        function PROG = Valid(obj,gl,id)
-            if isnumeric(id), PROG = id; return, end
-            if isfield(obj.prog,id)
-                PROG = obj.prog.(id);
-            else
-                PROG = obj.Init(gl,id);
-            end
         end
         
         function PROG = Init(obj,gl,shaderName,id)
@@ -85,6 +73,33 @@ classdef glShaders < handle
             obj.loc_cache.(f) = struct;
         end
         
+        function PROG = Valid(obj,gl,id)
+            if isnumeric(id), PROG = id; return, end
+            if isfield(obj.prog,id)
+                PROG = obj.prog.(id);
+            else
+                PROG = obj.Init(gl,id);
+            end
+        end
+        
+        function loc = GetUniLoc(obj,gl,id,name)
+            PROG = obj.Valid(gl,id);
+            obj.UseProg(gl,PROG);
+            f = sprintf('x%i',PROG);
+            if ~isfield(obj.loc_cache.(f),name)
+                loc = gl.glGetUniformLocation(PROG,name);
+                assert(loc >= 0, ['uniform location not found: ' name]);
+                obj.loc_cache.(f).(name) = loc;
+            end
+            loc = obj.loc_cache.(f).(name);
+        end
+        
+        function UseProg(obj,gl,prog)
+            if prog == obj.lastProg, return, end
+            gl.glUseProgram(prog);
+            obj.lastProg = prog;
+        end
+        
         function SetInt1(obj,gl,prog,name,v)
             loc = obj.GetUniLoc(gl,prog,name);
             gl.glUniform1i(loc,v);
@@ -136,24 +151,6 @@ classdef glShaders < handle
             for i=1:numel(fn)
                 obj.SetProgUni(gl,fn{i},S.(fn{i}));
             end
-        end
-        
-        function loc = GetUniLoc(obj,gl,id,name)
-            PROG = obj.Valid(gl,id);
-            obj.UseProg(gl,PROG);
-            f = sprintf('x%i',PROG);
-            if ~isfield(obj.loc_cache.(f),name)
-                loc = gl.glGetUniformLocation(PROG,name);
-                assert(loc >= 0, ['uniform location not found: ' name]);
-                obj.loc_cache.(f).(name) = loc;
-            end
-            loc = obj.loc_cache.(f).(name);
-        end
-        
-        function UseProg(obj,gl,prog)
-            if prog == obj.lastProg, return, end
-            gl.glUseProgram(prog);
-            obj.lastProg = prog;
         end
         
     end

@@ -8,6 +8,7 @@ classdef Simple3D < glCanvas
         shaders
         
         origin
+        colorcube
         img2D
         img3D
         text
@@ -17,8 +18,6 @@ classdef Simple3D < glCanvas
         function obj = Simple3D()
             % create java frame
             frame = jFrame('Simple3D',obj.sz);
-            
-            obj.shaders = glShaders(fullfile(fileparts(mfilename('fullpath')),'shaders'));
             
             % Initialize opengl in frame using GL4 profile and multisample 4
             obj.Init(frame,'GL4',4);
@@ -31,31 +30,46 @@ classdef Simple3D < glCanvas
         end
         
         function InitFcn(obj,d,gl)
-            % make axes element
-            
-            a = eye(4,3,'single');
-            xyz = a([4 1 4 2 4 3],:)';
-            color = a([1 1 2 2 3 3],:)';
-            obj.origin = glElement(gl,{xyz,color},'example1',obj.shaders,gl.GL_LINES);
+            % init shaders
+            obj.shaders = glShaders(fullfile(fileparts(mfilename('fullpath')),'shaders'));
 
-            im = imread('ngc6543a.jpg');
+            % make axes
+            xyz = single([0 0 0 ; 1 0 0 ; 0 0 0 ; 0 1 0 ; 0 0 0 ; 0 0 1]');
+            color = single([1 0 0 ; 1 0 0 ; 0 1 0 ; 0 1 0 ; 0 0 1 ; 0 0 1]');
+            obj.origin = glElement(gl,{xyz,color},'example1',obj.shaders,gl.GL_LINES);
+            obj.origin.uni.Mat4.model = eye(4,'single');
+            
+            % make color cube
+            N = 32;
+            w = single(linspace(0,1,N));
+            [x,y,z] = ndgrid(w,w,w);
+            xyz = [x(:) y(:) z(:)] + rand(N.^3,3)./N; % remove the +rand for some funky patterns
+            col = xyz;
+            obj.colorcube = glElement(gl,{xyz',col'},'example1',obj.shaders,gl.GL_POINTS);
+            M = MTrans3D([0.1 0.1 0.3]) * MScale3D(0.25);
+            obj.colorcube.uni.Mat4.model = single(M);
+            
+            % make ortho image
+            im = imread('cameraman.tif');
+            im = repmat(im,1,1,3);
             ijNorm = single([0 0;1 0;0 1;1 1]');
             pos = ijNorm./1.5+0.1; pos(3,:) = 0;
             obj.img2D = glElement(gl,{pos,ijNorm},'example2',obj.shaders,gl.GL_TRIANGLE_STRIP);
             obj.img2D.AddTexture(gl,0,gl.GL_TEXTURE_2D,im,gl.GL_RGB);
             obj.shaders.SetInt1(gl,'example2','texture1',0);
             
-            obj.shaders.Init(gl,'example2','image2');
+            %make perspective image
+            obj.shaders.Init(gl,'example2','image2'); % instance an other example2 shader with different uniform values
             obj.img3D = glElement(gl,{pos,ijNorm},'image2',obj.shaders,gl.GL_TRIANGLE_STRIP);
             obj.img3D.AddTexture(gl,1,gl.GL_TEXTURE_2D,'peppers.png',gl.GL_RGB);
             obj.shaders.SetInt1(gl,'image2','texture1',1);
             
+            % init text renderer
             obj.text = glText(gl,obj.shaders);
             obj.text.SetOrtho(0,1);
             obj.text.SetPerspective(45,0.1,200);
-
+            
             gl.glEnable(gl.GL_DEPTH_TEST);
-            gl.glLineWidth(1.5);
             gl.glClearColor(0,0,0,0);
             
             obj.glResize(d,gl);
@@ -77,6 +91,7 @@ classdef Simple3D < glCanvas
             obj.img2D.Draw(gl);
             obj.img3D.Draw(gl);
             obj.origin.Draw(gl);
+            obj.colorcube.Draw(gl);
             
             transfText =  MTrans3D([0.9 0 0.8]) * MRot3D([90 0 180],1);
             obj.text.Render3D(gl,'Arial','perspective',0.1,[1 1 0 1],m * transfText);
@@ -106,8 +121,8 @@ classdef Simple3D < glCanvas
                 case 1
                     % left click: rotate
                     obj.cam([3 1]) = c([3 1])+dij/5;
-                case 2
-                    % middle click: pan
+                case 3
+                    % right click: pan
                     obj.cam([4 5]) = c([4 5])+dij.*[-1 1]./mean(obj.sz).*c(6);
                 otherwise
                     return
@@ -134,7 +149,7 @@ classdef Simple3D < glCanvas
             m = MProj3D('F',[newSz(1)/newSz(2) 45 0.1 200],1);
             obj.shaders.SetMat4(gl,'example1','projection',single(m));
             obj.shaders.SetMat4(gl,'image2','projection',single(m));
-
+            
             obj.text.Reshape(newSz);
             
             % using UpdateFcn instead of Update since we already have d and gl
