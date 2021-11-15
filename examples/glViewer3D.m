@@ -22,6 +22,8 @@ classdef glViewer3D < glCanvas
     % ctrl + left click: display clicked coords in console
     %   *clicked coords are not 100% accurate since they are recalculated
     %   from the inverse projection.
+    % ctrl + middle click: zoom
+    % ctrl + right click: adjust EDL strength
     
     properties
         figSize
@@ -36,9 +38,8 @@ classdef glViewer3D < glCanvas
         axe
         screen
         
-        % camOrigin, camRotation, camTranslation
-        cam = struct('O',[0 0 0]','R',[-45 0 -45]','T',[0 0 -1]','F',1);
-
+        % camOrigin, camRotation, camTranslation, focalLength, EDL Strength
+        cam = struct('O',[0 0 0]','R',[-45 0 -45]','T',[0 0 -1]','F',1,'E',0.2);
         click = struct('button',0)
         
         clearFlag
@@ -57,7 +58,7 @@ classdef glViewer3D < glCanvas
             p = inputParser;
             p.addOptional('col',[]);
             p.addOptional('idx',[]);
-            p.addParameter('edl',0.2);
+            p.addParameter('edl',[]);
             p.parse(varargin{:});
             
             col = p.Results.col;
@@ -92,12 +93,12 @@ classdef glViewer3D < glCanvas
         function InitFcn(obj,d,gl,pos,col,idx,edl)
 
             if isempty(idx)
-                drawMode = 'GL_POINTS';
+                primitive = gl.GL_POINTS;
             else
-                drawMode = 'GL_TRIANGLES';
+                primitive = gl.GL_TRIANGLES;
             end
 
-            obj.points = glElement(gl,{pos',col'},'pointcloud',obj.shaders,gl.(drawMode),gl.GL_STATIC_DRAW,[gl.GL_FALSE gl.GL_TRUE]);
+            obj.points = glElement(gl,{pos',col'},'pointcloud',obj.shaders,primitive,gl.GL_STATIC_DRAW,[gl.GL_FALSE gl.GL_TRUE]);
             
             if ~isempty(idx)
                 obj.points.SetIndex(gl,idx');
@@ -108,6 +109,10 @@ classdef glViewer3D < glCanvas
             camDist = max(max(pos,[],1) - min(pos,[],1));
             if camDist > 0
                 obj.cam.T(3) = -camDist*2;
+            end
+
+            if ~isempty(edl)
+                obj.cam.E = edl;
             end
 
             axe_pos = single([0 0 0 ; 1 0 0 ; 0 0 0 ; 0 1 0 ; 0 0 0 ; 0 0 1]');
@@ -122,7 +127,8 @@ classdef glViewer3D < glCanvas
             obj.shaders.SetInt1(gl,'screen','colorTex',0);
             obj.screen.AddTexture(gl,1,gl.GL_TEXTURE_2D,[],[],gl.GL_LINEAR,gl.GL_LINEAR);
             obj.shaders.SetInt1(gl,'screen','infoTex',1);
-            obj.shaders.SetFloat1(gl,'screen','edlStrength',single(edl));
+
+            obj.shaders.SetFloat1(gl,'screen','edlStrength',single(obj.cam.E));
             
             obj.clearFlag = glFlags(gl,'GL_COLOR_BUFFER_BIT','GL_DEPTH_BUFFER_BIT');
             
@@ -243,29 +249,48 @@ classdef glViewer3D < glCanvas
             obj.cam.T = camTranslate(1:3);
             obj.cam.O = worldCoord;
         end
+
+        function SetEDL(obj,edl,updateFlag)
+            if nargin < 3, updateFlag = 1; end
+            [~,gl,temp] = obj.getContext; %#ok<ASGLU> temp is onCleanup()
+            obj.cam.E = edl;
+            obj.shaders.SetFloat1(gl,'screen','edlStrength',single(edl));
+            if updateFlag
+                obj.Update;
+            end
+        end
         
         function MouseDragged(obj,~,evt)
-            dcoords = getEvtXY(evt) - obj.click.coords;
+            dxy = getEvtXY(evt) - obj.click.coords;
+            ctrlPressed = bitand(evt.CTRL_MASK,evt.getModifiers);
             switch obj.click.button
                 case 1
                     % left click
                     % rotation: 0.2 deg/pixel
-                    obj.cam.R([3 1]) = obj.click.cam.R([3 1])+dcoords*0.2;
+                    obj.cam.R([3 1]) = obj.click.cam.R([3 1])+dxy*0.2;
                 case 2
                     % middle click
-                    if bitand(evt.CTRL_MASK,evt.getModifiers)
+                    if ctrlPressed
                         % focal length: half or double per 500 px
-                        s = 2^(dcoords(2)./500);
+                        s = 2^(dxy(2)./500);
                         obj.cam.F = obj.click.cam.F * s;
                     else
                         % zoom: half or double camDistance per 100 px
-                        s = 2^(dcoords(2)./100);
+                        s = 2^(dxy(2)./100);
                         obj.cam.T = obj.click.cam.T .* s;
                     end
                 case 3
                     % right click
-                    % translate 1:1 (clicked point follows mouse)
-                    obj.cam.T([1 2]) = obj.click.cam.T([1 2])+dcoords.*[1 -1]'./mean(obj.figSize).*-obj.click.cam.T(3)./obj.click.cam.F;
+                    if ctrlPressed
+                        % EDL: half or double camDistance per 100 px
+                        s = obj.click.cam.E * 2^(dxy(2)./100);
+                        obj.SetEDL(s,0);
+                    else
+                        % translate 1:1 (clicked point follows mouse)
+                        c = obj.click.cam;
+                        dxy = dxy.*[1 -1]';
+                        obj.cam.T([1 2]) = c.T([1 2])+dxy./mean(obj.figSize).*-c.T(3)./c.F;
+                    end
                 otherwise
                     return
             end
