@@ -248,8 +248,13 @@ classdef glViewer3D < glCanvas
             switch obj.click.button
                 case 1
                     % left click
-                    % rotation 0.2 deg/pixel
+                    % rotation: 0.2 deg/pixel
                     obj.cam.R([3 1]) = obj.click.cam.R([3 1])+dcoords*0.2;
+                case 2
+                    % middle click
+                    % zoom: half or double camDistance per 100 px
+                    s = 2^(dcoords(2)./100);
+                    obj.cam.T = obj.click.cam.T .* s;
                 case 3
                     % right click
                     % translate 1:1 (clicked point follows mouse)
@@ -261,10 +266,10 @@ classdef glViewer3D < glCanvas
         end
         
         function MouseWheelMoved(obj,~,evt)
-            s = evt.getUnitsToScroll / 50;
+            s = evt.getUnitsToScroll / 40;
             p = obj.glFcn(@obj.glGetPoint,getEvtXY(evt));
             obj.setFocus(p);
-            obj.cam.T(1:3) = obj.cam.T+obj.cam.T.*s;
+            obj.cam.T = obj.cam.T .* (1+s);
             obj.Update;
         end
         

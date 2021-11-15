@@ -21,7 +21,6 @@ header = header(startsWith(header,{'property ','element '}));
 i0 = find(startsWith(header,'element '));
 i1 = [i0(2:end) - 1 ; numel(header)];
 
-
 frewind(fid);
 fseek(fid,dataStart+1,0);
 

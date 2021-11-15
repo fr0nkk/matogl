@@ -85,10 +85,10 @@ classdef glCanvas < javacallbackmanager
         end
         
         function Update(obj)
-            % java events (like mouse drag) can happen so quickly that the
+            % Java events (like mouse drag) can happen so quickly that the
             % update rate doesn't follow. This strategy skips updates that
-            % happen before a previous a previous update had time to finish
-            % while ensuring that the last update requested is always run.
+            % happen before a previous update had time to finish while
+            % ensuring that the last update requested is always run.
             obj.updateNeeded = 1;
             if obj.updating || obj.glStop
                 return
@@ -100,8 +100,8 @@ classdef glCanvas < javacallbackmanager
                     obj.resizeNeeded = 0;
                     obj.ResizeFcn(d,gl);
                 end
-                obj.UpdateFcn(d,gl);
                 obj.updateNeeded = 0;
+                obj.UpdateFcn(d,gl);
                 [d,gl] = obj.glDrawnow;
                 if obj.glStop, return, end
             end
