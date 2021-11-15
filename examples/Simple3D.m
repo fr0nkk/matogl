@@ -4,6 +4,9 @@ classdef Simple3D < glCanvas
         cam single = [-45 0 -135 0 0 -3]; % [rotation translation]
         click struct = struct('ij',[0 0],'cam',[0 0 0 0 0 0],'button',0);
         sz single = [600 450];
+        
+        % perspective params {verticalFov near far}
+        pParams = {45 0.1 200};
 
         shaders
         
@@ -42,15 +45,14 @@ classdef Simple3D < glCanvas
             N = 32;
             w = single(linspace(0,1,N));
             [x,y,z] = ndgrid(w,w,w);
-            xyz = [x(:) y(:) z(:)] + rand(N.^3,3)./N; % remove the +rand for some funky patterns
+            xyz = [x(:) y(:) z(:)] + rand(N^3,3)./N; % remove the +rand for some funky patterns
             col = xyz;
             obj.colorcube = glElement(gl,{xyz',col'},'example1',obj.shaders,gl.GL_POINTS);
             M = MTrans3D([0.1 0.1 0.3]) * MScale3D(0.25);
             obj.colorcube.uni.Mat4.model = single(M);
             
             % make ortho image
-            im = imread('cameraman.tif');
-            im = repmat(im,1,1,3);
+            im = imread('ngc6543a.jpg');
             ijNorm = single([0 0;1 0;0 1;1 1]');
             pos = ijNorm./1.5+0.2; pos(3,:) = 0;
             obj.img2D = glElement(gl,{pos,ijNorm},'example2',obj.shaders,gl.GL_TRIANGLE_STRIP);
@@ -60,13 +62,13 @@ classdef Simple3D < glCanvas
             %make perspective image
             obj.shaders.Init(gl,'example2','image2'); % instance an other example2 shader with different uniform values
             obj.img3D = glElement(gl,{pos,ijNorm},'image2',obj.shaders,gl.GL_TRIANGLE_STRIP);
-            obj.img3D.AddTexture(gl,1,gl.GL_TEXTURE_2D,'peppers.png',gl.GL_RGB);
+            obj.img3D.AddTexture(gl,1,gl.GL_TEXTURE_2D,'peppers.png',gl.GL_RGB); % path to image is also valid
             obj.shaders.SetInt1(gl,'image2','texture1',1);
             
             % init text renderer
             obj.text = glText(gl,obj.shaders);
             obj.text.SetOrtho(0,1);
-            obj.text.SetPerspective(45,0.1,200);
+            obj.text.SetPerspective(obj.pParams{:});
             
             gl.glEnable(gl.GL_DEPTH_TEST);
             gl.glClearColor(0,0,0,0);
@@ -137,14 +139,14 @@ classdef Simple3D < glCanvas
         
         function ResizeFcn(obj,d,gl)
             % new canvas size
-            newSz = [obj.gc.getWidth,obj.gc.getHeight];
+            newSz = [obj.gc.getWidth obj.gc.getHeight];
             obj.sz = newSz;
             
             % keep the gl view fullscreen
             gl.glViewport(0,0,newSz(1),newSz(2));
             
             % Update the projection matrix
-            m = MProj3D('F',[newSz(1)/newSz(2) 45 0.1 200],1);
+            m = MProj3D('F',[newSz(1)/newSz(2) obj.pParams{:}],1);
             obj.shaders.SetMat4(gl,'example1','projection',single(m));
             obj.shaders.SetMat4(gl,'image2','projection',single(m));
             

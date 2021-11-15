@@ -1,8 +1,8 @@
-classdef gl3DViewer < glCanvas
+classdef glViewer3D < glCanvas
     % View point cloud or meshes with opengl render
-    % gl3DViewer(pos) : view point cloud with color scaled on Z coords
+    % glViewer3D(pos) : view point cloud with color scaled on Z coords
     %   pos must be [n x 3] where n is the number of points
-    % gl3DViewer(pos,col) : view point cloud with user set color
+    % glViewer3D(pos,col) : view point cloud with user set color
     %   col can be:
     %     [n x 1] : color will be gray scale
     %     [n x 3] : each point will have its RGB color
@@ -10,10 +10,10 @@ classdef gl3DViewer < glCanvas
     %     [] (empty): same as gl3DViewer(pos)
     %     floating point range: 0 to 1
     %     integer range: 0 to intmax
-    % gl3DViewer(pos,col,idx)
+    % glViewer3D(pos,col,idx)
     %    idx is the triangle list, in point indices (starting at 0)
     %      if using matlab functions like delaunay(), use (idx-1)
-    % gl3DViewer(___,'edl',edlStrength)
+    % glViewer3D(___,'edl',edlStrength)
     %    Set EDL strength for simulated light. Set to 0 to deactivate
     %
     % Left click: rotate
@@ -45,10 +45,10 @@ classdef gl3DViewer < glCanvas
     end
     
     methods
-        function obj = gl3DViewer(pos,varargin)
+        function obj = glViewer3D(pos,varargin)
             if nargin < 1
-                % test example - 250k points
-                [X,Y,Z] = peaks(500);
+                % test example - 160k points
+                [X,Y,Z] = peaks(400);
                 pos = [X(:) Y(:) Z(:)];
                 clear X Y Z
                 T = delaunay(pos(:,1:2));
@@ -218,12 +218,12 @@ classdef gl3DViewer < glCanvas
             if all(n,'all'), return, end % no valid points in click box
             depth(n) = nan;
             depth = rot90(depth);
-%             imagesc(depth)
+            
             [~,k] = min(depth,[],'all');
             [y,x] = ind2sub([w w],k);
             
             % normalized device coordinates
-            NDC = [(c+[x-r-0.5 r-y+1.5]')./s ; depth(k) ; 1].*2-1;
+            NDC = [(c+[x-r-0.5 ; r-y+1.5])./s ; depth(k) ; 1].*2-1;
             
             % world coordinates
             WC = obj.MProj * obj.MView \ NDC;
