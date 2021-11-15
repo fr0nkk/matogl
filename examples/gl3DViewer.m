@@ -13,6 +13,8 @@ classdef gl3DViewer < glCanvas
     % gl3DViewer(pos,col,idx)
     %    idx is the triangle list, in point indices (starting at 0)
     %      if using matlab functions like delaunay(), use (idx-1)
+    % gl3DViewer(___,'edl',edlStrength)
+    %    Set EDL strength for simulated light. Set to 0 to deactivate
     %
     % Left click: rotate
     % Right click: translate
@@ -31,27 +33,42 @@ classdef gl3DViewer < glCanvas
         shaders
 
         points
-        origin
+        axe
         screen
         
-        % rotation translation orbitcenter
-        cam = [-45 0 -45 0 0 -1 0 0 0];
-        click = struct('button',0,'coords',[0 0],'cam',[0 0 0 0 0 -1 0 0 0])
+        % camOrigin, camRotation, camTranslation
+        cam = struct('O',[0 0 0]','R',[-45 0 -45]','T',[0 0 -1]');
+
+        click = struct('button',0)
         
         clearFlag
     end
     
     methods
-        function obj = gl3DViewer(pos,col,idx)
-            if nargin < 2 || isempty(col)
+        function obj = gl3DViewer(pos,varargin)
+            if nargin < 1
+                % test example - 250k points
+                [X,Y,Z] = peaks(500);
+                pos = [X(:) Y(:) Z(:)];
+                clear X Y Z
+                T = delaunay(pos(:,1:2));
+                varargin{2} = T-1;
+            end
+            p = inputParser;
+            p.addOptional('col',[]);
+            p.addOptional('idx',[]);
+            p.addParameter('edl',0.2);
+            p.parse(varargin{:});
+            
+            col = p.Results.col;
+            if isempty(col)
                 col = floor(rescale(pos(:,3)).*255+1);
                 cmap = jet(256);
                 col = cmap(col,:);
             end
-            if nargin < 3, idx = []; end
 
             n = size(pos,1);
-            col = UniformColor(col,n);
+            col = PreprocColor(col,n);
 
             assert(isa(col,'uint8'),'Invalid color data');
             assert(size(pos,2)==3,'Location size must be [n x 3]');
@@ -62,7 +79,7 @@ classdef gl3DViewer < glCanvas
             pos = single(double(pos) - double(obj.pos0));            
             
             obj.shaders = glShaders(fullfile(fileparts(mfilename('fullpath')),'shaders'));
-            obj.Init(jFrame('GL 3D Viewer'),'GL4',0,pos,col,idx);
+            obj.Init(jFrame('GL 3D Viewer'),'GL4',0,pos,col,p.Results.idx,p.Results.edl);
             
             obj.setMethodCallback('MousePressed')
             obj.setMethodCallback('MouseReleased')
@@ -72,8 +89,14 @@ classdef gl3DViewer < glCanvas
             
         end
         
-        function InitFcn(obj,d,gl,pos,col,idx)
-            if isempty(idx), drawMode = 'GL_POINTS'; else, drawMode = 'GL_TRIANGLES'; end
+        function InitFcn(obj,d,gl,pos,col,idx,edl)
+
+            if isempty(idx)
+                drawMode = 'GL_POINTS';
+            else
+                drawMode = 'GL_TRIANGLES';
+            end
+
             obj.points = glElement(gl,{pos',col'},'pointcloud',obj.shaders,gl.(drawMode),gl.GL_STATIC_DRAW,[gl.GL_FALSE gl.GL_TRUE]);
             
             if ~isempty(idx)
@@ -82,13 +105,16 @@ classdef gl3DViewer < glCanvas
             
             obj.points.uni.Mat4.model = eye(4,'single');
 
-            r = max(pos) - min(pos);
-            obj.cam(6) = -max(r)*2;
+            camDist = max(max(pos,[],1) - min(pos,[],1));
+            if camDist > 0
+                obj.cam.T(3) = -camDist*2;
+            end
 
-            origin_pos = single([0 0 0 ; 1 0 0 ; 0 0 0 ; 0 1 0 ; 0 0 0 ; 0 0 1]');
-            origin_col = single([1 0 0 ; 1 0 0 ; 0 1 0 ; 0 1 0 ; 0 0 1 ; 0 0 1]');
-            obj.origin = glElement(gl,{origin_pos,origin_col},'pointcloud',obj.shaders,gl.GL_LINES);
-            obj.origin.uni.Mat4.model = eye(4,'single');
+            axe_pos = single([0 0 0 ; 1 0 0 ; 0 0 0 ; 0 1 0 ; 0 0 0 ; 0 0 1]');
+            axe_col = single([1 0 0 ; 1 0 0 ; 0 1 0 ; 0 1 0 ; 0 0 1 ; 0 0 1]');
+            obj.axe = glElement(gl,{axe_pos,axe_col},'pointcloud',obj.shaders,gl.GL_LINES);
+            obj.axe.uni.Mat4.model = eye(4,'single');
+            obj.axe.show = 0;
             
             quadVert = single([-1 -1 0 0; -1 1 0 1; 1 -1 1 0; 1 1 1 1]');
             obj.screen = glElement(gl,quadVert,'screen',obj.shaders,gl.GL_TRIANGLE_STRIP);
@@ -96,6 +122,7 @@ classdef gl3DViewer < glCanvas
             obj.shaders.SetInt1(gl,'screen','colorTex',0);
             obj.screen.AddTexture(gl,1,gl.GL_TEXTURE_2D,[],[],gl.GL_LINEAR,gl.GL_LINEAR);
             obj.shaders.SetInt1(gl,'screen','infoTex',1);
+            obj.shaders.SetFloat1(gl,'screen','edlStrength',single(edl));
             
             obj.clearFlag = glFlags(gl,'GL_COLOR_BUFFER_BIT','GL_DEPTH_BUFFER_BIT');
             
@@ -108,31 +135,29 @@ classdef gl3DViewer < glCanvas
         
         function UpdateFcn(obj,d,gl)
 
+            % render to texture
             obj.screen.UseFramebuffer(gl);
-            gl.glEnable(gl.GL_DEPTH_TEST);
 
+            gl.glEnable(gl.GL_DEPTH_TEST);
             gl.glClear(obj.clearFlag);
             
-            near = clamp(-obj.cam(6)/10,0.01,1);
-            far = clamp(-obj.cam(6)*10,10,1e6);
+            camDist = -obj.cam.T(3);
+            near = clamp(camDist/10,1e-3,10);
+            far = clamp(camDist*10,10,1e6);
             
             s = obj.figSize;
             obj.MProj = MProj3D('P',[[s/mean(s) 1].*near far]);
             obj.shaders.SetMat4(gl,'pointcloud','projection',obj.MProj);
             
-            obj.MView = MTrans3D(obj.cam(4:6)) * MRot3D(obj.cam(1:3),1,[1 3]) * MTrans3D(-obj.cam(7:9));
+            obj.MView = MTrans3D(obj.cam.T) * MRot3D(obj.cam.R,1,[1 3]) * MTrans3D(-obj.cam.O);
             obj.shaders.SetMat4(gl,'pointcloud','view',obj.MView);
-
-            if obj.click.button
-                obj.origin.Draw(gl);
-            end
-            obj.screen.UseFramebuffer(gl);
-
-            gl.glEnable(gl.GL_DEPTH_TEST);
-
-            obj.points.Draw(gl);
             
+            obj.axe.Draw(gl);
+            obj.points.Draw(gl);
+
+            % render to screen
             gl.glBindFramebuffer(gl.GL_FRAMEBUFFER,0);
+
             gl.glDisable(gl.GL_DEPTH_TEST);
             gl.glClear(gl.GL_COLOR_BUFFER_BIT);
             obj.screen.Draw(gl);
@@ -140,7 +165,7 @@ classdef gl3DViewer < glCanvas
             d.swapBuffers;
         end
         
-        function ResizeFcn(obj,d,gl)
+        function ResizeFcn(obj,~,gl)
             sz = [obj.gc.getWidth,obj.gc.getHeight];
             obj.figSize = sz;
             
@@ -153,25 +178,27 @@ classdef gl3DViewer < glCanvas
             obj.shaders.SetVec2(gl,'screen','scrSz',single(sz));
         end
         
-        function MousePressed(obj,src,evt)
+        function MousePressed(obj,~,evt)
             obj.click.button = evt.getButton;
-            c = [evt.getX evt.getY];
+            c = getEvtXY(evt);
             obj.click.coords = c;
             p = obj.glFcn(@obj.glGetPoint,c);
             if evt.getModifiers == 18 && ~isempty(p) % ctrl pressed
-                fprintf('Point coords: %.3f, %.3f, %.3f\n',double(p)+obj.pos0);
+                fprintf('Point coords: %.3f, %.3f, %.3f\n',double(p)+obj.pos0');
             end
             obj.setFocus(p);
             obj.click.cam = obj.cam;
+            obj.axe.show = 1;
             obj.Update
         end
         
-        function MouseReleased(obj,src,evt)
+        function MouseReleased(obj,~,~)
             obj.click.button = 0;
+            obj.axe.show = 0;
             obj.Update;
         end
         
-        function p = glGetPoint(obj,d,gl,c)
+        function p = glGetPoint(obj,~,gl,c)
             obj.screen.UseFramebuffer(gl);
             gl.glReadBuffer(gl.GL_NONE);
             
@@ -180,7 +207,7 @@ classdef gl3DViewer < glCanvas
             
             b = javabuffer(zeros(w*w,1,'single'));
             
-            s = obj.figSize;
+            s = obj.figSize';
             c(2) = s(2) - c(2);
             
             gl.glReadPixels(c(1)-r,c(2)-r,w,w,gl.GL_DEPTH_COMPONENT,gl.GL_FLOAT,b);
@@ -196,72 +223,81 @@ classdef gl3DViewer < glCanvas
             [y,x] = ind2sub([w w],k);
             
             % normalized device coordinates
-            NDC = [(c+[x-r-0.5 r-y+1.5])./s depth(k) 1]'.*2-1;
+            NDC = [(c+[x-r-0.5 r-y+1.5]')./s ; depth(k) ; 1].*2-1;
             
             % world coordinates
             WC = obj.MProj * obj.MView \ NDC;
-            WC = WC(1:3)'./WC(4);
+            WC = WC(1:3)./WC(4);
             
             if ~any(isnan(WC))
-                obj.origin.uni.Mat4.model = MTrans3D(WC);
+                obj.axe.uni.Mat4.model = MTrans3D(WC);
                 p = WC;
             end
         end
         
         function setFocus(obj,worldCoord)
             if isempty(worldCoord), return, end
-            M =  MTrans3D(obj.cam(4:6)) * MRot3D(obj.cam(1:3),1,[1 3]);
-            camTranslate = M * [worldCoord-obj.cam(7:9) 1]';
-            obj.cam(4:6) = camTranslate(1:3);
-            obj.cam(7:9) = worldCoord;
+            M =  MTrans3D(obj.cam.T) * MRot3D(obj.cam.R,1,[1 3]);
+            camTranslate = M * [worldCoord-obj.cam.O ; 1];
+            obj.cam.T = camTranslate(1:3);
+            obj.cam.O = worldCoord;
         end
         
-        function MouseDragged(obj,src,evt)
-            dcoords = [evt.getX evt.getY] - obj.click.coords;
+        function MouseDragged(obj,~,evt)
+            dcoords = getEvtXY(evt) - obj.click.coords;
             switch obj.click.button
                 case 1
+                    % left click
                     % rotation 0.2 deg/pixel
-                    obj.cam([3 1]) = obj.click.cam([3 1])+dcoords/5;
+                    obj.cam.R([3 1]) = obj.click.cam.R([3 1])+dcoords*0.2;
                 case 3
-                    % translate
-                    obj.cam([4 5]) = obj.click.cam([4 5])+dcoords.*[-1 1]./mean(obj.figSize).*obj.click.cam(6);
+                    % right click
+                    % translate 1:1 (clicked point follows mouse)
+                    obj.cam.T([1 2]) = obj.click.cam.T([1 2])+dcoords.*[1 -1]'./mean(obj.figSize).*-obj.click.cam.T(3);
                 otherwise
                     return
             end
             obj.Update;
         end
         
-        function MouseWheelMoved(obj,src,evt)
+        function MouseWheelMoved(obj,~,evt)
             s = evt.getUnitsToScroll / 50;
-            p = obj.glFcn(@obj.glGetPoint,[evt.getX evt.getY]);
+            p = obj.glFcn(@obj.glGetPoint,getEvtXY(evt));
             obj.setFocus(p);
-            obj.cam(4:6) = obj.cam(4:6)+obj.cam(4:6).*s;
+            obj.cam.T(1:3) = obj.cam.T+obj.cam.T.*s;
             obj.Update;
         end
         
-        function WindowClosing(obj,src,evt)
+        function WindowClosing(obj,~,~)
             obj.glStop = 1;
         end
         
     end
 end
 
-function c = UniformColor(c,n)
+function c = PreprocColor(c,n)
     if size(c,2) == 1
         % gray tones
         c = repmat(c,1,3);
     end
-    % color
+
     if ~isinteger(c)
+        % floating point 0 to 1
         c = uint8(c.*255);
     end
 
     if ~isa(c,'uint8')
+        % integer that is not uint8
         c = uint8(single(c)./single(c(1)+inf).*255);
     end
 
     if size(c,1) == 1
+        % uniform color
         c = repmat(c,n,1);
     end
+end
+
+function xy = getEvtXY(evt)
+    xy = [evt.getX evt.getY]';
 end
 

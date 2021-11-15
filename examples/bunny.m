@@ -1,11 +1,3 @@
-% show peaks function - 250k points
-[X,Y,Z] = peaks(500);
-coords = [X(:) Y(:) Z(:)];
-clear X Y Z
-T = delaunay(coords(:,1:2));
-gl3DViewer(coords,[],T-1); % (T-1) : make triangle indices start at 0
-
-
 % load bunny
 data = readply('bun_zipper.ply');
 loc = getfields(data.vertex,2,'x','y','z');

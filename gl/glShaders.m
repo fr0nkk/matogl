@@ -24,6 +24,7 @@ classdef glShaders < handle
         
         function PROG = Init(obj,gl,shaderName,id)
             if nargin < 4, id = shaderName; end
+            assert(~isfield(obj.prog,id),[id ' is already initialized']);
             
             [fl,dl] = filelist(obj.shaderPath,[shaderName '.*.glsl']);
             types = extractBetween(fl,'.','.');

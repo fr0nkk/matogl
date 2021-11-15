@@ -52,7 +52,7 @@ classdef Simple3D < glCanvas
             im = imread('cameraman.tif');
             im = repmat(im,1,1,3);
             ijNorm = single([0 0;1 0;0 1;1 1]');
-            pos = ijNorm./1.5+0.1; pos(3,:) = 0;
+            pos = ijNorm./1.5+0.2; pos(3,:) = 0;
             obj.img2D = glElement(gl,{pos,ijNorm},'example2',obj.shaders,gl.GL_TRIANGLE_STRIP);
             obj.img2D.AddTexture(gl,0,gl.GL_TEXTURE_2D,im,gl.GL_RGB);
             obj.shaders.SetInt1(gl,'example2','texture1',0);
@@ -97,7 +97,7 @@ classdef Simple3D < glCanvas
             transfText =  MTrans3D([0.9 0 0.5]) * MRot3D(-obj.cam(1:3),1);
             obj.text.Render3D(gl,'Arial','normal',0.1,[1 1 0 1],m * transfText);
             
-            transfText =  MTrans3D(single([10 10 0]));
+            transfText =  MTrans3D(single([20 20 0]));
             obj.text.Render2D(gl,'Arial','ortho',18,[1 1 0 1],transfText);
             
             % update display

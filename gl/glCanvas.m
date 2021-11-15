@@ -1,15 +1,18 @@
 classdef glCanvas < javacallbackmanager
     % Abstract class for creating OpenGL component
     % Set this class as a superclass for your opengl app
-    % Define methods UpdateFcn and InitFcn in your opengl class
+    % Define those methods in your class:
+    % InitFcn(d,gl,varargin)
+    % UpdateFcn(d,gl)
+    % ResizeFcn(d,gl)
     properties
-        frame % matlab jFrame
+        frame % jFrame
         gc % com.jogamp.opengl.awt.GLCanvas
         glStop logical = 0;
-        autoCheckError = 1;
-        updateNeeded = 0;
-        resizeNeeded = 1;
-        updating = 0;
+        autoCheckError logical = 1;
+        updateNeeded logical = 0;
+        resizeNeeded logical = 1;
+        updating logical = 0;
     end
     
     properties(Access=private)
@@ -18,6 +21,7 @@ classdef glCanvas < javacallbackmanager
     
     methods(Sealed=true)
         function Init(obj, frame, glProfile, multisample, varargin)
+            assert(isa(frame,'jFrame'),'frame argument must be jFrame()');
             import com.jogamp.opengl.*;
             if nargin < 4, multisample = 0; end
             obj.frame = frame;
@@ -49,13 +53,6 @@ classdef glCanvas < javacallbackmanager
             [varargout{1:nargout}] = fcn(d,gl,varargin{:});
             if obj.glStop, return, end
             if obj.autoCheckError, obj.CheckError(gl); end
-        end
-
-        function CheckError(obj,gl)
-            err = gl.glGetError();
-            if err
-                warning(['GL Error 0x' dec2hex(err,4)]);
-            end
         end
 
         function [d,gl,temp] = getContext(obj)
@@ -115,7 +112,7 @@ classdef glCanvas < javacallbackmanager
             obj.updating = 0;
         end
 
-        function ComponentResized(obj,src,evt)
+        function ComponentResized(obj,~,~)
             obj.resizeNeeded = 1;
             obj.Update;
         end
@@ -129,6 +126,15 @@ classdef glCanvas < javacallbackmanager
             delete(obj.frame);
         end
         
+    end
+
+    methods(Static)
+        function CheckError(gl)
+            err = gl.glGetError();
+            if err
+                warning(['GL Error 0x' dec2hex(err,4)]);
+            end
+        end
     end
     
     methods(Abstract)

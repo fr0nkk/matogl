@@ -1,8 +1,12 @@
 classdef glElement < handle
     
     properties
-        show logical = true;
-        uni = struct; % .UniMat4.varName = eye(4)
+        show logical = true; % is false, Draw() is skipped for this element
+        
+        uni = struct; 
+        % when an uni struct is defined, the uniform values will be updated
+        % before every Draw()
+        % .UniMat4.varName = eye(4)
     end
     
     properties(Hidden)
@@ -29,6 +33,8 @@ classdef glElement < handle
             if ~iscell(data), data={data}; end
             data = data(:);
             nd = numel(data);
+            
+            % todo - use inputParser
             if nargin < 6, drawType = gl.GL_STATIC_DRAW; end
             if nargin < 7, normFlag = gl.GL_FALSE; end
             if nargin < 8, AttribIFlag = 0; end
@@ -152,17 +158,16 @@ classdef glElement < handle
         end
         
         function Draw(obj,gl)
-            if obj.show
-                obj.shaders.UseProg(gl,obj.PROG);
-                obj.shaders.SetProgUni(gl,obj.PROG,obj.uni)
-                obj.SetTex(gl);
-                gl.glBindVertexArray(obj.VAO);
-                if isempty(obj.VBOi)
-                    gl.glDrawArrays(obj.PRIM,0,min(obj.SZ(:,2)));
-                else
-                    gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, obj.VBOi);
-                    gl.glDrawElements(obj.PRIM,obj.ni,gl.GL_UNSIGNED_INT,0);
-                end
+            if ~obj.show, return, end
+            obj.shaders.UseProg(gl,obj.PROG);
+            obj.shaders.SetProgUni(gl,obj.PROG,obj.uni)
+            obj.SetTex(gl);
+            gl.glBindVertexArray(obj.VAO);
+            if isempty(obj.VBOi)
+                gl.glDrawArrays(obj.PRIM,0,min(obj.SZ(:,2)));
+            else
+                gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, obj.VBOi);
+                gl.glDrawElements(obj.PRIM,obj.ni,gl.GL_UNSIGNED_INT,0);
             end
         end
         

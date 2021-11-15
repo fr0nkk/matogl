@@ -1,4 +1,5 @@
 classdef SimpleTriangle < glCanvas
+    % simplest opengl triangle drawing example
     
     properties
         
@@ -8,7 +9,6 @@ classdef SimpleTriangle < glCanvas
         function obj = SimpleTriangle()
             frame = jFrame('SimpleTriangle',[600 450]);
             obj.Init(frame,'GL2');
-            obj.setMethodCallback('ComponentResized');
         end
         
         function InitFcn(obj,d,gl)
