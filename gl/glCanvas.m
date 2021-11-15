@@ -131,8 +131,9 @@ classdef glCanvas < javacallbackmanager
     methods(Static)
         function CheckError(gl)
             err = gl.glGetError();
-            if err
-                warning(['GL Error 0x' dec2hex(err,4)]);
+            while err > 0
+                disp(['[' 8 'GL Error 0x' dec2hex(err,4) ']' 8]);
+                err = gl.glGetError();
             end
         end
     end

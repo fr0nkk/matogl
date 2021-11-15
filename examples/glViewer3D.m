@@ -37,7 +37,7 @@ classdef glViewer3D < glCanvas
         screen
         
         % camOrigin, camRotation, camTranslation
-        cam = struct('O',[0 0 0]','R',[-45 0 -45]','T',[0 0 -1]');
+        cam = struct('O',[0 0 0]','R',[-45 0 -45]','T',[0 0 -1]','F',1);
 
         click = struct('button',0)
         
@@ -146,7 +146,7 @@ classdef glViewer3D < glCanvas
             far = clamp(camDist*10,10,1e6);
             
             s = obj.figSize;
-            obj.MProj = MProj3D('P',[[s/mean(s) 1].*near far]);
+            obj.MProj = MProj3D('P',[[s/mean(s) obj.cam.F].*near far]);
             obj.shaders.SetMat4(gl,'pointcloud','projection',obj.MProj);
             
             obj.MView = MTrans3D(obj.cam.T) * MRot3D(obj.cam.R,1,[1 3]) * MTrans3D(-obj.cam.O);
@@ -183,7 +183,8 @@ classdef glViewer3D < glCanvas
             c = getEvtXY(evt);
             obj.click.coords = c;
             p = obj.glFcn(@obj.glGetPoint,c);
-            if evt.getModifiers == 18 && ~isempty(p) % ctrl pressed
+
+            if bitand(evt.CTRL_MASK,evt.getModifiers) && ~isempty(p) % ctrl pressed
                 fprintf('Point coords: %.3f, %.3f, %.3f\n',double(p)+obj.pos0');
             end
             obj.setFocus(p);
@@ -252,13 +253,19 @@ classdef glViewer3D < glCanvas
                     obj.cam.R([3 1]) = obj.click.cam.R([3 1])+dcoords*0.2;
                 case 2
                     % middle click
-                    % zoom: half or double camDistance per 100 px
-                    s = 2^(dcoords(2)./100);
-                    obj.cam.T = obj.click.cam.T .* s;
+                    if bitand(evt.CTRL_MASK,evt.getModifiers)
+                        % focal length: half or double per 500 px
+                        s = 2^(dcoords(2)./500);
+                        obj.cam.F = obj.click.cam.F * s;
+                    else
+                        % zoom: half or double camDistance per 100 px
+                        s = 2^(dcoords(2)./100);
+                        obj.cam.T = obj.click.cam.T .* s;
+                    end
                 case 3
                     % right click
                     % translate 1:1 (clicked point follows mouse)
-                    obj.cam.T([1 2]) = obj.click.cam.T([1 2])+dcoords.*[1 -1]'./mean(obj.figSize).*-obj.click.cam.T(3);
+                    obj.cam.T([1 2]) = obj.click.cam.T([1 2])+dcoords.*[1 -1]'./mean(obj.figSize).*-obj.click.cam.T(3)./obj.click.cam.F;
                 otherwise
                     return
             end
