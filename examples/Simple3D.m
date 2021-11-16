@@ -23,7 +23,7 @@ classdef Simple3D < glCanvas
             frame = jFrame('Simple3D',obj.sz);
             
             % Initialize opengl in frame using GL4 profile and multisample 4
-            obj.Init(frame,'GL4',4);
+            obj.Init(frame,'GL3',4);
             
             % activate callbacks
             obj.setMethodCallback('MousePressed');
