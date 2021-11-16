@@ -1,5 +1,6 @@
 classdef jFrame < javacallbackmanager
-    
+    % basic JFrame display in matlab
+
     properties
         jf % javax.swing.JFrame
     end
@@ -18,17 +19,11 @@ classdef jFrame < javacallbackmanager
             
             obj.populateCallbacks(obj.jf);
             obj.setCallback('WindowClosed',@(~,~) obj.delete);
-%             if isdeployed
-%                 waitfor(obj.jf)
-%             end
         end
         
         function delete(obj)
             obj.rmCallback;
             obj.jf.dispose;
-%             if isdeployed
-%                 delete(obj.f);
-%             end
         end
         
     end

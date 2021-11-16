@@ -1,12 +1,12 @@
 function M = MRot3D(a,degFlag,order)
 % outputs rotation matrix for rotating a = [rot x, rot y, rot z] in the
-% order specified, default order is [3 2 1] (ZYX)
+% order specified, default rotation order is [3 2 1] (ZYX)
 
     if nargin < 2, degFlag = 0; end
     if nargin < 3, order = [3 2 1]; end
 
     if degFlag
-        % conversion to radians
+        % convert to radians
         a = a*(pi/180);
     end
 

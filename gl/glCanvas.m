@@ -1,10 +1,11 @@
 classdef glCanvas < javacallbackmanager
     % Abstract class for creating OpenGL component
-    % Set this class as a superclass for your opengl app
+    % Set this class as a superclass for your opengl render class
     % Define those methods in your class:
-    % InitFcn(d,gl,varargin)
-    % UpdateFcn(d,gl)
-    % ResizeFcn(d,gl)
+    % InitFcn(obj,d,gl,varargin)
+    % UpdateFcn(obj,d,gl)
+    % ResizeFcn(obj,d,gl)
+    
     properties
         frame % jFrame
         gc % com.jogamp.opengl.awt.GLCanvas
@@ -132,6 +133,8 @@ classdef glCanvas < javacallbackmanager
         function CheckError(gl)
             err = gl.glGetError();
             while err > 0
+                % make text orange
+                % https://undocumentedmatlab.com/articles/another-command-window-text-color-hack
                 disp(['[' 8 'GL Error 0x' dec2hex(err,4) ']' 8]);
                 err = gl.glGetError();
             end

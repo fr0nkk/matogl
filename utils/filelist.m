@@ -1,23 +1,33 @@
-function [filename,dirname,fullname] = filelist(varargin)
-% retourne la liste de fichiers. s'emploie comme fullfile()
-% accepte les wildcard (*)
+function [filenames,dirnames,fullnames] = filelist(varargin)
+% returns files matching the requested path/file.
+% can be used like fullfile()
+% f = filelist('C:\SomeDir\abc');
+%   returns all filenames (including extensions) contained in 'C:\SomeDir\abc'.
+%   Same as filelist('C:\SomeDir','abc')
+% f = filelist('C:\SomeDir\abc\*.jpg');
+%   returns only matching files, using the * wildcard
+% [f,d] = filelist( ___ )
+%   Also return the directory of each file
+%   Useful when using it like fullfile('C:\*\*.jpg')
+% [ __ , fullname ] = filelist( ___ )
+%   Also return the full file path of each file.
 
 fullPath = fullfile(varargin{:});
 
 if iscell(fullPath)
-    [filename,dirname] = cellfun(@filelist,fullPath,'uni',0);
-    filename = vertcat(filename{:});
-    dirname = vertcat(dirname{:});
+    [filenames,dirnames] = cellfun(@filelist,fullPath,'uni',0);
+    filenames = vertcat(filenames{:});
+    dirnames = vertcat(dirnames{:});
     return
 end
 
 d = dir(fullPath);
 idx = ~[d.isdir];
-filename={d(idx).name}';
-dirname={d(idx).folder}';
+filenames={d(idx).name}';
+dirnames={d(idx).folder}';
 
 if nargout == 3
-    fullname = fullfile(dirname,filename);
+    fullnames = fullfile(dirnames,filenames);
 end
 end
 
