@@ -40,7 +40,7 @@ classdef glViewer3D < glCanvas
         
         % camOrigin, camRotation, camTranslation, focalLength, EDL Strength
         cam = struct('O',[0 0 0]','R',[-45 0 -45]','T',[0 0 -1]','F',1,'E',0.2);
-        click = struct('button',0)
+        click
         
         clearFlag
     end
@@ -48,7 +48,7 @@ classdef glViewer3D < glCanvas
     methods
         function obj = glViewer3D(pos,varargin)
             if nargin < 1
-                % test example - 160k points
+                % test example - 160k points, 318k triangles
                 [X,Y,Z] = peaks(400);
                 pos = [X(:) Y(:) Z(:)];
                 clear X Y Z
@@ -77,10 +77,10 @@ classdef glViewer3D < glCanvas
             assert(size(pos,1)==size(col,1),'Location and color are not the same length');
             
             obj.pos0 = mean(pos,1,'omitnan');
-            pos = single(double(pos) - double(obj.pos0));            
+            pos = single(double(pos) - double(obj.pos0));
             
             obj.shaders = glShaders(fullfile(fileparts(mfilename('fullpath')),'shaders'));
-            obj.Init(jFrame('GL 3D Viewer'),'GL4',0,pos,col,p.Results.idx,p.Results.edl);
+            obj.Init(jFrame('GL 3D Viewer'),'GL3',0,pos,col,p.Results.idx,p.Results.edl);
             
             obj.setMethodCallback('MousePressed')
             obj.setMethodCallback('MouseReleased')
@@ -115,6 +115,10 @@ classdef glViewer3D < glCanvas
                 obj.cam.E = edl;
             end
 
+            obj.click.button = 0;
+            obj.click.coords = [0 0];
+            obj.click.cam = obj.cam;
+
             axe_pos = single([0 0 0 ; 1 0 0 ; 0 0 0 ; 0 1 0 ; 0 0 0 ; 0 0 1]');
             axe_col = single([1 0 0 ; 1 0 0 ; 0 1 0 ; 0 1 0 ; 0 0 1 ; 0 0 1]');
             obj.axe = glElement(gl,{axe_pos,axe_col},'pointcloud',obj.shaders,gl.GL_LINES);
@@ -125,9 +129,6 @@ classdef glViewer3D < glCanvas
             obj.screen = glElement(gl,quadVert,'screen',obj.shaders,gl.GL_TRIANGLE_STRIP);
             obj.screen.AddTexture(gl,0,gl.GL_TEXTURE_2D,[],[],gl.GL_LINEAR,gl.GL_LINEAR);
             obj.shaders.SetInt1(gl,'screen','colorTex',0);
-            obj.screen.AddTexture(gl,1,gl.GL_TEXTURE_2D,[],[],gl.GL_LINEAR,gl.GL_LINEAR);
-            obj.shaders.SetInt1(gl,'screen','infoTex',1);
-
             obj.shaders.SetFloat1(gl,'screen','edlStrength',single(obj.cam.E));
             
             obj.clearFlag = glFlags(gl,'GL_COLOR_BUFFER_BIT','GL_DEPTH_BUFFER_BIT');
@@ -148,8 +149,8 @@ classdef glViewer3D < glCanvas
             gl.glClear(obj.clearFlag);
             
             camDist = -obj.cam.T(3);
-            near = clamp(camDist/10,1e-3,10);
-            far = clamp(camDist*10,10,1e6);
+            near = clamp(camDist/10,1e-3,1);
+            far = clamp(camDist*10,100,1e6);
             
             s = obj.figSize;
             obj.MProj = MProj3D('P',[[s/mean(s) obj.cam.F].*near far]);
@@ -175,8 +176,7 @@ classdef glViewer3D < glCanvas
             sz = [obj.gc.getWidth,obj.gc.getHeight];
             obj.figSize = sz;
             
-            obj.screen.EditTex(gl,0,{0,gl.GL_RGB,sz(1),sz(2),0,gl.GL_RGB,gl.GL_UNSIGNED_BYTE,[]});
-            obj.screen.EditTex(gl,1,{0,gl.GL_RGBA32F,sz(1),sz(2),0,gl.GL_RGBA,gl.GL_FLOAT,[]});
+            obj.screen.EditTex(gl,0,{0,gl.GL_RGBA32F,sz(1),sz(2),0,gl.GL_RGBA,gl.GL_FLOAT,[]});
             obj.screen.EditRenderbuffer(gl,gl.GL_DEPTH_COMPONENT32F,sz);
             
             gl.glViewport(0,0,sz(1),sz(2));
@@ -226,7 +226,7 @@ classdef glViewer3D < glCanvas
             depth(n) = nan;
             depth = rot90(depth);
             
-            [~,k] = min(depth,[],'all');
+            [~,k] = min(depth(:));
             [y,x] = ind2sub([w w],k);
             
             % normalized device coordinates

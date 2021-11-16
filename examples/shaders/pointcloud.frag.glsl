@@ -1,12 +1,9 @@
-#version 460 core
-
-in vec3 color;
-in vec4 info;
+#version 330 core
 
 layout(location = 0) out vec4 frag_color;
-layout(location = 1) out vec4 frag_info;
+
+in vec4 color;
 
 void main(){
-frag_color = vec4(color, 1.0f);
-frag_info = info;
+frag_color = color;
 }

@@ -1,10 +1,9 @@
-#version 460 core
+#version 330 core
 
 layout(location = 0) in vec3 vertex_position;
 layout(location = 1) in vec3 vertex_color;
 
-out vec3 color;
-out vec4 info;
+out vec4 color;
 
 uniform float ptSize = 1.0f;
 uniform mat4 model = mat4(1.0f);
@@ -16,11 +15,10 @@ uniform float maxPointSize = 1.0f;
 
 void main()
 {
-color = vertex_color;
 
 vec4 camView = view * (model * vec4(vertex_position,1.0f));
 gl_Position = projection * camView;
 
-info = vec4(0,0,gl_DrawID+1,-camView.z);
+color = vec4(vertex_color,-camView.z);
 
 }
