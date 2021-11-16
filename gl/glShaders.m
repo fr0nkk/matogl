@@ -1,4 +1,5 @@
 classdef glShaders < handle
+    % helper class to abstract some opengl shader pipeline
     
     properties
         shaderPath

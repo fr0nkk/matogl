@@ -1,4 +1,5 @@
 classdef glText < handle
+    % helper class to abstract some opengl text rendering pipeline
     
     properties
         LoadedFont

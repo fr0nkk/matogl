@@ -1,12 +1,13 @@
 classdef glElement < handle
-    
+    % helper class to abstract some opengl rendering pipeline
+
     properties
         show logical = true; % is false, Draw() is skipped for this element
         
         uni = struct; 
         % when an uni struct is defined, the uniform values will be updated
         % before every Draw()
-        % .UniMat4.varName = eye(4)
+        % .UniMat4.varName = value;
     end
     
     properties(Hidden)
