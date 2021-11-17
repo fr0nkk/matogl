@@ -7,7 +7,8 @@ classdef glMandelbrot < glCanvas
         M % glElement
         
         click = struct('xy',[0 0],'z',[0 0]);
-        cmap single = jet(256);
+        cmap single = [jet(128) ; flipud(jet(128))];
+        maxIter int32 = 1000;
     end
     
     methods
@@ -30,6 +31,7 @@ classdef glMandelbrot < glCanvas
             obj.M.uni.Float1.scale = single(1.6);
 
             obj.shaders.SetVec3(gl,'mandelbrot','cmap',obj.cmap);
+            obj.shaders.SetInt1(gl,'mandelbrot','maxIter',obj.maxIter);
             gl.glClearColor(0,0,0,0);
         end
         
@@ -66,9 +68,6 @@ classdef glMandelbrot < glCanvas
 
             obj.M.uni.Float1.scale = (1+z) .* s;
             obj.M.uni.Vec2.offset = obj.M.uni.Vec2.offset + dxy.*[-1 1].* ratio * z * s;
-
-            a = 20*log2(50/obj.M.uni.Float1.scale);
-            obj.M.uni.Int1.maxIter = int32(a);
 
             obj.Update;
         end
