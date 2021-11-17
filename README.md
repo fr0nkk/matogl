@@ -5,3 +5,4 @@ Access the OpenGL rendering pipeline directly from matlab.
 
 No mex file or any other external library needed.
 
+[![View Matlab OpenGL on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/102109-matlab-opengl)
