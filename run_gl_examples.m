@@ -21,4 +21,4 @@ bunny;
 glMandelbrot(100,false); 
 
 % max 5000 iterations, double precision (for big boy GPU)
-% glMandelbrot(5000,true); 
+% glMandelbrot(5000,true);

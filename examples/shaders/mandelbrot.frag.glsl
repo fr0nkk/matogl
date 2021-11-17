@@ -21,8 +21,8 @@ uniform vec3[256] cmap;
 uniform int maxIter = 100;
 
 void main(){
-    dvec2 c = _vec2(coords.rg)*ratio*scale+offset;
-    dvec2 z = _vec2(0,0);
+    _vec2 c = _vec2(coords.rg)*ratio*scale+offset;
+    _vec2 z = _vec2(0,0);
     int i = 0;
 	for(i;i<maxIter;i++){
         z = _vec2(z.x*z.x - z.y*z.y , 2.0*z.x*z.y) + c;
