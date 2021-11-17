@@ -35,7 +35,6 @@ classdef glMandelbrot < glCanvas
         function InitFcn(obj,~,gl,maxIter,deep)
             obj.shaders = glShaders(fullfile(fileparts(mfilename('fullpath')),'shaders'));
             
-            
             if deep
                 preproc = '#define DEEP';
                 obj.f1 = 'Double1';
@@ -45,6 +44,7 @@ classdef glMandelbrot < glCanvas
                 obj.f1 = 'Float1';
                 obj.f2 = 'Vec2';
             end
+            
             obj.shaders.Init(gl,'mandelbrot','mb',preproc);
 
             vert = single([-1 -1;1 -1;-1 1;1 1]');
