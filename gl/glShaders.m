@@ -23,7 +23,7 @@ classdef glShaders < handle
             obj.shaderPath = shaderPath;
         end
         
-        function PROG = Init(obj,gl,shaderName,id)
+        function PROG = Init(obj,gl,shaderName,id,preproc)
             if nargin < 4, id = shaderName; end
             assert(~isfield(obj.prog,id),[id ' is already initialized']);
             
@@ -35,6 +35,10 @@ classdef glShaders < handle
             for i=1:ns
                 shaders(i) = gl.glCreateShader(gl.(gltypes{i}));
                 str = fileread(fullfile(dl{i},fl{i}));
+                if nargin > 4
+                    k = find(str==newline,1);
+                    str = insertAfter(str,k,[preproc newline]);
+                end
                 gl.glShaderSource(shaders(i),1,str,[]);
                 gl.glCompileShader(shaders(i));
 
@@ -109,11 +113,22 @@ classdef glShaders < handle
         
         function SetFloat1(obj,gl,prog,name,v)
             loc = obj.GetUniLoc(gl,prog,name);
-            gl.glUniform1f(loc,v);
+            gl.glUniform1f(loc,single(v));
+        end
+
+        function SetDouble1(obj,gl,prog,name,v)
+            loc = obj.GetUniLoc(gl,prog,name);
+            gl.glUniform1d(loc,v);
+        end
+
+        function SetDVec2(obj,gl,prog,name,v)
+            loc = obj.GetUniLoc(gl,prog,name);
+            gl.glUniform2d(loc,v(1),v(2));
         end
         
         function SetVec2(obj,gl,prog,name,v)
             loc = obj.GetUniLoc(gl,prog,name);
+            v = single(v);
             gl.glUniform2f(loc,v(1),v(2));
         end
         

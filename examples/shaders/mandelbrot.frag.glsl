@@ -1,12 +1,19 @@
-#version 330
+#version 400
 
 layout(location=0) out vec4 FragColor;
 
 in vec2 coords;
 
-uniform float scale = 1.0;
-uniform vec2 offset = vec2(0.0);
-uniform vec2 ratio = vec2(1.0);
+#ifdef DEEP
+#define _vec2 dvec2
+#define _float double
+#else
+#define _vec2 vec2
+#define _float float
+#endif
+uniform _float scale = 1.0;
+uniform _vec2 offset = vec2(0.0);
+uniform _vec2 ratio = vec2(1.0);
 uniform vec3 maxColor = vec3(0.0);
 
 uniform vec3[256] cmap;
@@ -14,11 +21,11 @@ uniform vec3[256] cmap;
 uniform int maxIter = 100;
 
 void main(){
-    vec2 c = coords.rg*ratio*scale+offset;
-    vec2 z = vec2(0,0);
+    dvec2 c = _vec2(coords.rg)*ratio*scale+offset;
+    dvec2 z = _vec2(0,0);
     int i = 0;
 	for(i;i<maxIter;i++){
-        z = vec2(z.x*z.x - z.y*z.y , 2.0*z.x*z.y) + c;
+        z = _vec2(z.x*z.x - z.y*z.y , 2.0*z.x*z.y) + c;
 		if(length(z) > 2.0) 
         {
             FragColor = vec4(cmap[i % 256].rgb,1.0);
