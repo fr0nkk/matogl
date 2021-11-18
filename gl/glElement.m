@@ -51,7 +51,7 @@ classdef glElement < handle
             obj.SZ = vertcat(sz{:});
             assert(all(obj.SZ(:,2) == obj.SZ(1,2)),'all data must have same size in dim 2');
             
-            obj.VBO = glGenBuffer(@gl.glGenBuffers,nd);
+            obj.VBO = glGen(@gl.glGenBuffers,nd);
             obj.bufferElemSz = zeros(nd,1);
             obj.EditData(gl,data);
             mt = cellfun(@class,data,'uni',0);
@@ -62,7 +62,7 @@ classdef glElement < handle
             gltypes = strcat('GL_',gltypes);
             types = getfields(gl,2,gltypes{:});
             
-            obj.VAO = glGenBuffer(@gl.glGenVertexArrays,1);
+            obj.VAO = glGen(@gl.glGenVertexArrays,1);
             gl.glBindVertexArray(obj.VAO);
             for i=1:numel(obj.VBO)
                 gl.glBindBuffer(gl.GL_ARRAY_BUFFER,obj.VBO(i));
@@ -81,7 +81,7 @@ classdef glElement < handle
             if nargin < 9, wrapS = gl.GL_REPEAT; end
             if nargin < 10, wrapT = gl.GL_REPEAT; end
 
-            obj.TEX(i+1) = glGenBuffer(@gl.glGenTextures,1);
+            obj.TEX(i+1) = glGen(@gl.glGenTextures,1);
             obj.TEXTYPE(i+1) = texType;
             
             obj.EditTex(gl,i,data,dataType)
@@ -150,7 +150,7 @@ classdef glElement < handle
         
         function SetIndex(obj,gl,idx)
             if isempty(obj.VBOi)
-                obj.VBOi = glGenBuffer(@gl.glGenBuffers,1);
+                obj.VBOi = glGen(@gl.glGenBuffers,1);
             end
             gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, obj.VBOi);
             [b,esz] = javabuffer(uint32(idx));
@@ -183,7 +183,7 @@ classdef glElement < handle
         
         function EditRenderbuffer(obj,gl,type,sz)
             if isempty(obj.RBO)
-                obj.RBO = glGenBuffer(@gl.glGenRenderbuffers,1);
+                obj.RBO = glGen(@gl.glGenRenderbuffers,1);
             end
             gl.glBindRenderbuffer(gl.GL_RENDERBUFFER,obj.RBO);
 %             gl.glRenderbufferStorageMultisample(gl.GL_RENDERBUFFER, 4, type, sz(1), sz(2)); % todo
@@ -196,7 +196,7 @@ classdef glElement < handle
         
         function SetFramebuffer(obj,gl,rboType)
             if isempty(obj.FBO)
-                obj.FBO = glGenBuffer(@gl.glGenFramebuffers,1);
+                obj.FBO = glGen(@gl.glGenFramebuffers,1);
             end
             obj.UseFramebuffer(gl);
             n = numel(obj.TEX);

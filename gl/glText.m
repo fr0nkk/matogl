@@ -20,7 +20,7 @@ classdef glText < handle
         function obj = glText(gl,shaders)
             import com.jogamp.graph.*;
             obj.shaders=shaders;
-            obj.VAO = glGenBuffer(@gl.glGenVertexArrays,1);
+            obj.VAO = glGen(@gl.glGenVertexArrays,1);
             gl.glBindVertexArray(obj.VAO);
             obj.FF = font.FontFactory;
             renderMode = curve.Region.VARWEIGHT_RENDERING_BIT;
