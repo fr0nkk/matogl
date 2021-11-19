@@ -1,13 +1,13 @@
-classdef SimpleTriangle < glCanvas
-    % simplest opengl triangle drawing example
+classdef glExample1 < glCanvas
+    % Some "Hello World!" OpenGL example
     
     properties
         
     end
     
     methods
-        function obj = SimpleTriangle()
-            frame = jFrame('SimpleTriangle',[600 450]);
+        function obj = glExample1()
+            frame = jFrame('HelloTriangle 1',[600 450]);
             obj.Init(frame,'GL2');
         end
         

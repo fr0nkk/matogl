@@ -1,4 +1,4 @@
-classdef Simple3D < glCanvas
+classdef glExample4 < glCanvas
     
     properties
         cam single = [-45 0 -135 0 0 -3]; % [rotation translation]
@@ -18,9 +18,9 @@ classdef Simple3D < glCanvas
     end
     
     methods
-        function obj = Simple3D()
+        function obj = glExample4()
             % create java frame
-            frame = jFrame('Simple3D',obj.sz);
+            frame = jFrame('Utility Examples',obj.sz);
             
             % Initialize opengl in frame using GL4 profile and multisample 4
             obj.Init(frame,'GL3',4);
