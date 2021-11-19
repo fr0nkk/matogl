@@ -22,6 +22,13 @@ classdef glCanvas < javacallbackmanager
     
     methods(Sealed=true)
         function Init(obj, frame, glProfile, multisample, varargin)
+            % frame is a jFrame(). Included in /utils/
+            % glProfile is a char array of the requested GL profile. Example: 'GL3'
+            % multisample is the number of samples for MSAA (multisample anti-aliasing)
+            %  a value of 0 deactivates MSAA
+            %  (default to 0 if not set)
+            % varargin are arguments you want to pass to InitFcn(obj,d,gl,varargin)
+
             assert(isa(frame,'jFrame'),'frame argument must be jFrame()');
             import com.jogamp.opengl.*;
             if nargin < 4, multisample = 0; end
