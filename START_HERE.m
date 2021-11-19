@@ -20,6 +20,7 @@ glViewer3D();
 bunny;
 
 % Showcase of a mandelbrot set explorer using opengl
+% scroll wheel to zoom, left click to drag
 % max 100 iterations, single precision
 glMandelbrot(100,false); 
 
