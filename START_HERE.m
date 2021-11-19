@@ -11,7 +11,7 @@ glExample3; % using home made utility to abstract some initializations
 glExample4;
 
 % Showcase of more advanced utility: a polyvalent OpenGL 3D Viewer.
-% Left click to rotate, right click to translate, scroll wheel to zoom
+% Left click: orbit - right click: pan - scroll wheel: zoom
 % A call without arguments shows peaks() mesh with 160k points.
 % doc glViewer3D
 glViewer3D();
@@ -20,7 +20,7 @@ glViewer3D();
 bunny;
 
 % Showcase of a mandelbrot set explorer using opengl
-% scroll wheel to zoom, left click to drag
+% scroll wheel: zoom - left click: pan
 % max 100 iterations, single precision
 glMandelbrot(100,false); 
 

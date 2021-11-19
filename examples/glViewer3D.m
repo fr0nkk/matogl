@@ -16,8 +16,8 @@ classdef glViewer3D < glCanvas
     % glViewer3D(___,'edl',edlStrength)
     %    Set EDL strength for simulated light. Set to 0 to deactivate
     %
-    % Left click: rotate
-    % Right click: translate
+    % Left click: orbit
+    % Right click: pan
     % scroll wheel: zoom
     % ctrl + left click: display clicked coords in console
     %   *clicked coords are not 100% accurate since they are recalculated
