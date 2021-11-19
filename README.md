@@ -24,7 +24,7 @@ You need to define the following abstract methods. In each of these methods, the
 
 - ### `ResizeFcn(obj,d,gl)`
   - Called once after initialization, just before the first frame update, and when the user changes the window size.
-  - Always called just before the `UpdateFcn(obj,d,gl)`.
+  - Always called just before the `UpdateFcn(obj,d,gl)`, when needed.
   - This should contain your opengl resize pipeline.
 
 ## Included gl utility
