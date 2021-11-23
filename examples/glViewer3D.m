@@ -93,8 +93,7 @@ classdef glViewer3D < glCanvas
             obj.setMethodCallback('MouseReleased')
             obj.setMethodCallback('MouseDragged')
             obj.setMethodCallback('MouseWheelMoved')
-            obj.frame.setCallback('WindowClosing',@obj.WindowClosing);
-            
+            obj.parent.setCallback('WindowClosing',@obj.WindowClosing);
         end
         
         function InitFcn(obj,d,gl,pos,col,idx,edl)
@@ -180,7 +179,7 @@ classdef glViewer3D < glCanvas
         end
         
         function ResizeFcn(obj,~,gl)
-            sz = [obj.gc.getWidth,obj.gc.getHeight];
+            sz = [obj.java.getWidth,obj.java.getHeight];
             obj.figSize = sz;
             
             obj.screen.EditTex(gl,0,{0,gl.GL_RGBA32F,sz(1),sz(2),0,gl.GL_RGBA,gl.GL_FLOAT,[]});

@@ -7,8 +7,8 @@ classdef glCanvas < javacallbackmanager
     % ResizeFcn(obj,d,gl)
     
     properties
-        frame % jFrame
-        gc % com.jogamp.opengl.awt.GLCanvas
+        parent % jFrame
+        java % com.jogamp.opengl.awt.GLCanvas
         glStop logical = 0;
         autoCheckError logical = 1;
         updateNeeded logical = 0;
@@ -21,7 +21,7 @@ classdef glCanvas < javacallbackmanager
     end
     
     methods(Sealed=true)
-        function Init(obj, frame, glProfile, multisample, varargin)
+        function Init(obj, parent, glProfile, multisample, varargin)
             % frame is a jFrame(). Included in /utils/
             % glProfile is a char array of the requested GL profile. Example: 'GL3'
             % multisample is the number of samples for MSAA (multisample anti-aliasing)
@@ -29,25 +29,25 @@ classdef glCanvas < javacallbackmanager
             %  (default to 0 if not set)
             % varargin are arguments you want to pass to InitFcn(obj,d,gl,varargin)
 
-            assert(isa(frame,'jFrame'),'frame argument must be jFrame()');
+            assert(isa(parent,'jFrame'),'parent argument must be jFrame()');
             import com.jogamp.opengl.*;
             if nargin < 4, multisample = 0; end
-            obj.frame = frame;
+            obj.parent = parent;
             gp = GLProfile.get(glProfile);
             cap = GLCapabilities(gp);
             if multisample
                 cap.setSampleBuffers(1);
                 cap.setNumSamples(multisample);
             end
-            obj.gc = awt.GLCanvas(cap);
+            obj.java = awt.GLCanvas(cap);
             
-            frame.jf.add(obj.gc);
-            frame.jf.show();
-            obj.gc.setAutoSwapBufferMode(false);
-            obj.gc.display();
+            parent.java.add(obj.java);
+            parent.java.show();
+            obj.java.setAutoSwapBufferMode(false);
+            obj.java.display();
             
-            obj.populateCallbacks(obj.gc);
-            frame.setCallback('WindowClosed',@(~,~) obj.delete);
+            obj.populateCallbacks(obj.java);
+            parent.setCallback('WindowClosed',@(~,~) obj.delete);
             obj.glFcn(@obj.InitFcn,varargin{:});
             obj.setMethodCallback('ComponentResized');
             obj.Update;
@@ -66,7 +66,7 @@ classdef glCanvas < javacallbackmanager
         function [d,gl,temp] = getContext(obj)
             % always request temp. This ensures that the context is
             % released when temp is cleared.
-            obj.context = obj.gc.getContext;
+            obj.context = obj.java.getContext;
             if ~obj.context.isCurrent
                 obj.context.makeCurrent;
             end
@@ -131,7 +131,7 @@ classdef glCanvas < javacallbackmanager
         function delete(obj)
             obj.glStop = 1;
             obj.rmCallback;
-            delete(obj.frame);
+            delete(obj.parent);
         end
         
     end

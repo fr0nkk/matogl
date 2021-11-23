@@ -139,7 +139,7 @@ classdef glExample4 < glCanvas
         
         function ResizeFcn(obj,d,gl)
             % new canvas size
-            newSz = [obj.gc.getWidth obj.gc.getHeight];
+            newSz = [obj.java.getWidth obj.java.getHeight];
             obj.sz = newSz;
             
             % keep the gl view fullscreen

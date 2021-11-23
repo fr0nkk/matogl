@@ -65,7 +65,7 @@ classdef glMandelbrot < glCanvas
         end
         
         function ResizeFcn(obj,~,gl)
-            obj.sz = [obj.gc.getWidth obj.gc.getHeight];
+            obj.sz = [obj.java.getWidth obj.java.getHeight];
             obj.shaders.(['Set' obj.f2])(gl,'mb','ratio',obj.sz/mean(obj.sz));
             gl.glViewport(0,0,obj.sz(1),obj.sz(2));
         end

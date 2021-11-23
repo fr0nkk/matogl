@@ -31,7 +31,7 @@ classdef glExample1 < glCanvas
         end
 
         function ResizeFcn(obj,d,gl)
-            gl.glViewport(0,0,obj.gc.getWidth,obj.gc.getHeight);
+            gl.glViewport(0,0,obj.java.getWidth,obj.java.getHeight);
         end
     end
 end
