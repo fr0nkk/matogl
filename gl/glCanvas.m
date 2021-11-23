@@ -41,8 +41,7 @@ classdef glCanvas < javacallbackmanager
             end
             obj.java = awt.GLCanvas(cap);
             
-            parent.java.add(obj.java);
-            parent.java.show();
+            parent.add(obj.java);
             obj.java.setAutoSwapBufferMode(false);
             obj.java.display();
             

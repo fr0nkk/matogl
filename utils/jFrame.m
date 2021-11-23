@@ -20,6 +20,11 @@ classdef jFrame < javacallbackmanager
             obj.populateCallbacks(obj.java);
             obj.setCallback('WindowClosed',@(~,~) obj.delete);
         end
+
+        function add(obj,children)
+            obj.java.add(children);
+            obj.java.show;
+        end
         
         function delete(obj)
             obj.rmCallback;
