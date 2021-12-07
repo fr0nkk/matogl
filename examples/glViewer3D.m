@@ -137,19 +137,18 @@ classdef glViewer3D < glCanvas
             quadVert = single([-1 -1 0 0; -1 1 0 1; 1 -1 1 0; 1 1 1 1]');
             obj.screen = glmu.DrawableArray(quadVert,'screen',gl.GL_TRIANGLE_STRIP);
 
-            T = glmu.Texture(0,gl.GL_TEXTURE_2D,2);
+            T = glmu.Texture(0,gl.GL_TEXTURE_2D);
 
             obj.screen.AddTexture('colorTex',T);
 
             obj.screen.program.uniforms.edlStrength.Set(obj.cam.E);
             
-            obj.clearFlag = glFlags(gl,'GL_COLOR_BUFFER_BIT','GL_DEPTH_BUFFER_BIT');
+            obj.clearFlag = glmu.BitFlags('GL_COLOR_BUFFER_BIT','GL_DEPTH_BUFFER_BIT');
             
             gl.glClearColor(0,0,0,0);
             
             renderbuffer = glmu.Renderbuffer(gl.GL_DEPTH_COMPONENT32F);
             renderbuffer.AddTexture(T,gl.GL_FLOAT,gl.GL_RGBA,gl.GL_RGBA32F);
-            renderbuffer.Resize([100 100]);
             obj.framebuffer = glmu.Framebuffer(gl.GL_FRAMEBUFFER,renderbuffer,gl.GL_DEPTH_ATTACHMENT);
         end
         
@@ -172,15 +171,15 @@ classdef glViewer3D < glCanvas
             obj.MView = MTrans3D(obj.cam.T) * MRot3D(obj.cam.R,1,[1 3]) * MTrans3D(-obj.cam.O);
             obj.ptcloudProgram.uniforms.view.Set(obj.MView);
             
-            obj.axe.Draw();
-            obj.points.Draw();
+            obj.axe.Draw;
+            obj.points.Draw;
 
             % render to screen
             obj.framebuffer.Release;
 
             gl.glDisable(gl.GL_DEPTH_TEST);
             gl.glClear(gl.GL_COLOR_BUFFER_BIT);
-            obj.screen.Draw();
+            obj.screen.Draw;
             
             d.swapBuffers;
         end
@@ -189,7 +188,7 @@ classdef glViewer3D < glCanvas
             sz = [obj.java.getWidth,obj.java.getHeight];
             obj.figSize = sz;
             
-            obj.framebuffer.renderbuffer.Resize(sz);
+            obj.framebuffer.Resize(sz);
             
             gl.glViewport(0,0,sz(1),sz(2));
             
@@ -219,7 +218,6 @@ classdef glViewer3D < glCanvas
         
         function p = glGetPoint(obj,~,gl,c)
             obj.framebuffer.Bind;
-            gl.glReadBuffer(gl.GL_NONE);
             
             r = 2; % click radius (square box) px
             w = 2*r+1; % square side length px

@@ -6,47 +6,35 @@ classdef DrawableArray < glmu.internal.Object
         element
         program
         uni = struct
-        type
+        % uni.(variableName) = value -> this uniform variable will be updated before every Draw() call of this object
+        primitive
         textures = {};
         samplers = {};
     end
     
     methods
-        function obj = DrawableArray(data,program,type)
-            switch class(data)
-                case 'glmu.Buffer'
-                    array = glmu.Array(data);
-                case 'glmu.Array'
-                    array = data;
-                otherwise
-                    buffer = glmu.Buffer(obj.gl.GL_ARRAY_BUFFER,data);
-                    array = glmu.Array(buffer);
-            end
-
-            if ~isa(program,'glmu.Program')
-                program = glmu.Program(program);
-            end
-
-            obj.array = array;
-            obj.program = program;
-            obj.type = obj.Const(type,1);
+        function obj = DrawableArray(array,program,primitive)
+            % array = glmu.Array | glmu.Buffer, {bufferData}
+            % program = glmu.Program | {glmu.Shader} | 'shaderName'
+            % primitive = GL primitive
+            obj.array = glmu.Array(array);
+            obj.program = glmu.Program(program);
+            obj.primitive = obj.Const(primitive,1);
         end
 
         function SetElement(obj,element)
+            % element = glmu.Buffer(GL_ELEMENT_ARRAY_BUFFER) | ElementIndices
             if ~isa(element,'glmu.Buffer')
-                element = glmu.Buffer(obj.gl.GL_ELEMENT_ARRAY_BUFFER,{uint32(element)});
+                element = glmu.Buffer(obj.gl.GL_ELEMENT_ARRAY_BUFFER,uint32(element));
             end
             obj.element = element;
         end
 
         function AddTexture(obj,sampler,varargin)
-            if isa(varargin{1},'glmu.Texture')
-                texture = varargin{1};
-            else
-                texture = glmu.Texture(varargin{:});
-            end
+            % sampler = uniform sampler variable name
+            % varargin = glmu.Texture | args for glmu.Texture(varargin{:})
             i = size(obj.textures,1)+1;
-            obj.textures{i} = texture;
+            obj.textures{i} = glmu.Texture(varargin{:});
             obj.samplers{i} = sampler;
         end
 
@@ -62,11 +50,11 @@ classdef DrawableArray < glmu.internal.Object
             
             if isempty(obj.element)
                 if nargin < 3, count = n; end
-                obj.gl.glDrawArrays(obj.type,offset,count);
+                obj.gl.glDrawArrays(obj.primitive,offset,count);
             else
                 if nargin < 3, count = prod(obj.element.sz); end
                 obj.element.Bind;
-                obj.gl.glDrawElements(obj.type,count,obj.element.type,offset);
+                obj.gl.glDrawElements(obj.primitive,count,obj.element.type,offset);
             end
         end
 

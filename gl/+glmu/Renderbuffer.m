@@ -22,7 +22,7 @@ classdef Renderbuffer < glmu.internal.Object
             obj.texInternalformats(i) = obj.Const(texInternalFormat);
         end
 
-        function Resize(obj,sz)
+        function SetSize(obj,sz)
             obj.Bind;
             obj.gl.glRenderbufferStorage(obj.gl.GL_RENDERBUFFER,obj.internalFormat,sz(1),sz(2));
             for i=1:numel(obj.textures)

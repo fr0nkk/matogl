@@ -17,16 +17,20 @@ classdef Text < glmu.internal.Object
     
     methods
         function obj = Text(font,varargin)
+            % font = 'fontName'
+            % varargin = args for New(str,sz,rgba,model)
             obj.renderer = obj.state.text.New;
             obj.font = font;
             if nargin > 1
                 obj.Add(varargin{:});
             end
-            
-            
         end
 
         function Add(obj,str,sz,rgba,model)
+            % str = char array to render
+            % sz = font size
+            % optional rgba = [r g b a] color property of the text, default is [0.5 0.5 0.5 1] (gray opaque)
+            % optional model : [4x4] matrix model transformation
             if nargin < 4, rgba = [0.5 0.5 0.5 1]; end
             if nargin < 5, model = eye(4); end
             i = numel(obj.str)+1;

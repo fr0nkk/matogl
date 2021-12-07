@@ -8,6 +8,10 @@ classdef TextureState < glmu.internal.ObjectState
 %             unit1 [id4     id5     id6    ]
     end
     
+    properties(Access=private)
+        targetsDim
+    end
+    
     methods
         
         function id = New(obj,varargin)
@@ -43,6 +47,32 @@ classdef TextureState < glmu.internal.ObjectState
 
         function Delete(obj,id)
             
+        end
+
+        function ndim = GetDim(obj,target)
+            if isempty(obj.targetsDim)
+                D1 = {'GL_TEXTURE_1D'
+                    'GL_PROXY_TEXTURE_1D'};
+                D2 = {'GL_TEXTURE_2D'
+                    'GL_PROXY_TEXTURE_2D'
+                    'GL_TEXTURE_1D_ARRAY'
+                    'GL_PROXY_TEXTURE_1D_ARRAY'
+                    'GL_TEXTURE_RECTANGLE'
+                    'GL_PROXY_TEXTURE_RECTANGLE'
+                    'GL_TEXTURE_CUBE_MAP_POSITIVE_X'
+                    'GL_TEXTURE_CUBE_MAP_NEGATIVE_X'
+                    'GL_TEXTURE_CUBE_MAP_POSITIVE_Y'
+                    'GL_TEXTURE_CUBE_MAP_NEGATIVE_Y'
+                    'GL_TEXTURE_CUBE_MAP_POSITIVE_Z'
+                    'GL_TEXTURE_CUBE_MAP_NEGATIVE_Z'
+                    'GL_PROXY_TEXTURE_CUBE_MAP'};
+                D3 = {'GL_TEXTURE_3D'
+                    'GL_PROXY_TEXTURE_3D'
+                    'GL_TEXTURE_2D_ARRAY'
+                    'GL_PROXY_TEXTURE_2D_ARRAY'};
+                obj.targetsDim = {obj.Const(D1) obj.Const(D2) obj.Const(D3)};
+            end
+            ndim = find(cellfun(@(c) any(c==target),obj.targetsDim));
         end
 
     end

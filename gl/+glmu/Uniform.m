@@ -10,9 +10,13 @@ classdef Uniform < glmu.internal.Object
     end
     
     methods
-        function obj = Uniform(prog,name,type,transpose)
-            obj.prog = prog;
-            obj.id = obj.gl.glGetUniformLocation(prog.id,name);
+        function obj = Uniform(program,name,type,transpose)
+            % program = glmu.Program
+            % name = uniform variable name
+            % type = glsl type | gl type (glUniform[type]v)
+            % optional transpose = true/false transpose if matrix
+            obj.prog = program;
+            obj.id = obj.gl.glGetUniformLocation(program.id,name);
             if obj.id < 0
                 error(['Uniform location for ''' name ''' not found'])
             end
@@ -29,6 +33,7 @@ classdef Uniform < glmu.internal.Object
         end
 
         function Set(obj,value)
+            % vlue = numerical | java.nio.Buffer
             try
                 if all(obj.lastValue == value,'all'), return, end
             catch

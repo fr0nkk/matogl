@@ -11,7 +11,9 @@ classdef RenderbufferState < glmu.internal.ObjectState
         end
 
         function Bind(obj,id)
+            if obj.current == id, return, end
             obj.gl.glBindRenderbuffer(obj.gl.GL_RENDERBUFFER,id);
+            obj.current = id;
         end
 
         function Delete(obj,id)

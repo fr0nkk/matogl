@@ -13,6 +13,7 @@ classdef Framebuffer < glmu.internal.Object
         end
 
         function Edit(obj,renderbuffer,attachment)
+            renderbuffer.SetSize([100 100]);
             obj.Bind;
             textures = renderbuffer.textures;
             n = numel(textures);
@@ -28,6 +29,10 @@ classdef Framebuffer < glmu.internal.Object
             
             assert(obj.gl.glCheckFramebufferStatus(obj.gl.GL_FRAMEBUFFER) == obj.gl.GL_FRAMEBUFFER_COMPLETE,'incomplete framebuffer');
             obj.renderbuffer = renderbuffer;
+        end
+
+        function Resize(obj,sz)
+            obj.renderbuffer.SetSize(sz);
         end
 
         function Bind(obj)

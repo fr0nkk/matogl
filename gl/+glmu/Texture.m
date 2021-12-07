@@ -8,15 +8,17 @@ classdef Texture < glmu.internal.Object
     end
     
     methods
-        function obj = Texture(unit,target,ndim,varargin)
+        function obj = Texture(unit,target,varargin)
+            if isa(unit,'glmu.Texture'), obj=unit; return, end
             obj.unit = unit;
             obj.id = obj.state.texture.New(1);
             obj.target = obj.Const(target,1);
-            obj.ndim = ndim;
-            obj.editFcn = str2func(sprintf('glTexImage%iD',ndim));
+            obj.ndim = obj.state.texture.GetDim(obj.target);
+            assert(~isempty(obj.ndim),'Invalid texture target');
+            obj.editFcn = str2func(sprintf('glTexImage%iD',obj.ndim));
             obj.Edit(varargin{:});
         end
-
+        
         function Edit(obj,data,format,genMipMap,internalformat)
             if nargin < 2, return, end
             if nargin < 4, genMipMap = 1; end
@@ -52,12 +54,12 @@ classdef Texture < glmu.internal.Object
                 obj.Parameter(obj.gl.GL_TEXTURE_MIN_FILTER,obj.gl.GL_LINEAR);
             end
         end
-
+        
         function Parameter(obj,param,value)
             obj.Bind;
             obj.gl.glTexParameteri(obj.target,obj.Const(param,1),value);
         end
-
+        
         function PrepareDraw(obj,program,sampler)
             obj.state.texture.Valid(obj.unit,obj.target,obj.id)
             program.uniforms.(sampler).Set(obj.unit);

@@ -36,12 +36,10 @@ classdef TextState < glmu.internal.ObjectState
 
         function Render(obj,font,str,sz,rgba,modelview,projection)
             if ~isfield(obj.LoadedFont,font)
-                if ~endsWith(font,'.ttf')
-                    if ispc
-                        fnt = fullfile('C:\Windows\Fonts',[font '.ttf']);
-                    elseif isunix
-                        fnt = fullfile('/usr/share/fonts', [font '.ttf']);
-                    end
+                if ispc
+                    fnt = fullfile('C:\Windows\Fonts',[font '.ttf']);
+                elseif isunix
+                    fnt = fullfile('/usr/share/fonts', [font '.ttf']);
                 end
                 try
                     newF = obj.FF.get(java.io.File(fnt));
@@ -50,9 +48,9 @@ classdef TextState < glmu.internal.ObjectState
                 end
                 obj.LoadedFont.(font) = newF;
             end
+            F = obj.LoadedFont.(font);
             obj.array.Bind;
             obj.RS.setColorStatic(rgba(1),rgba(2),rgba(3),rgba(4));
-            F = obj.LoadedFont.(font);
             M = obj.RR.getMatrix;
             M.glMatrixMode(M.GL_PROJECTION);
             M.glLoadMatrixf(javabuffer(single(projection)));

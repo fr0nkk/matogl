@@ -4,7 +4,10 @@ classdef Program < glmu.internal.Object
         shaders
         uniforms = struct;
         subResourcesDir = 'shaders'
-        shaderTypes = { %type, gl_type
+    end
+    
+    properties(Access=private)
+        shaderTypes = { %ext, GL_Type constant
                         'vert' 'GL_VERTEX_SHADER'
                         'tesc' 'GL_TESS_CONTROL_SHADER'
                         'tese' 'GL_TESS_EVALUATION_SHADER'
@@ -16,6 +19,11 @@ classdef Program < glmu.internal.Object
     
     methods
         function obj = Program(shaders,autoCacheUniforms,varargin)
+            % shaders = glmu.Program | {glmu.Shader} | 'shaderName'
+            %   when used with 'shaderName', add #N to select the instance N
+            % optional autoCacheUniforms : autoCacheAction (default 1)
+            % optional preproc : char array to append up top before compilation
+            if isa(shaders,'glmu.Program'), obj = shaders; return, end
             cacheProg = '';
             if ischar(shaders)
                 cacheProg = shaders;
@@ -38,6 +46,8 @@ classdef Program < glmu.internal.Object
         end
 
         function shaders = GetShaders(obj,name,varargin)
+            % name : 'shaderName'
+            % optional preproc : char array to append up top before compilation
             d = fullfile(obj.state.resourcesPath,obj.subResourcesDir);
             [fl,dl] = filelist(d,[name '.*.glsl']);
             types = extractBetween(fl,'.','.');
@@ -56,12 +66,6 @@ classdef Program < glmu.internal.Object
             end
             obj.shaders = shaders(:);
         end
-
-%         function Detach(obj,gl,shaders)
-%             for i=1:numel(shaders)
-%                 gl.glDetachShader(obj.id,shaders{i}.id);
-%             end
-%         end
 
         function [v,b] = Get(obj,name)
             b = javabuffer(int32(0));
@@ -90,6 +94,9 @@ classdef Program < glmu.internal.Object
         end
 
         function AutoCacheUniforms(obj,action)
+            % action = 0 : do nothing and return
+            % action = 1 : auto find and cache glmu.Uniforms (default)
+            % action = 2 : like action 1 but with no warning
             if nargin < 2, action = 1; end
             if ~action, return, end
             [uniName,type] = cellfun(@(c) c.GetUniforms,obj.shaders,'uni',0);
@@ -109,8 +116,11 @@ classdef Program < glmu.internal.Object
 
         end
 
-        function CacheUniform(obj,name,varargin)
-            obj.uniforms.(name) = glmu.Uniform(obj,name,varargin{:});
+        function CacheUniform(obj,name,type,varargin)
+            % name = uniform variable name
+            % type = glsl type | gl type (glUniform[type]v)
+            % optional transpose = true/false transpose if matrix
+            obj.uniforms.(name) = glmu.Uniform(obj,name,type,varargin{:});
         end
 
         function SetUniform(obj,name,value)
@@ -118,6 +128,7 @@ classdef Program < glmu.internal.Object
         end
 
         function SetUniforms(obj,uni)
+            % uni = struct of uniforms and their values
             fn = fieldnames(uni);
             for i=1:numel(fn)
                 obj.uniforms.(fn{i}).Set(uni.(fn{i}));

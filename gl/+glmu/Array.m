@@ -8,11 +8,16 @@ classdef Array < glmu.internal.Object
     
     methods
         function obj = Array(varargin)
+            % optional buffer = glmu.Buffer | buffer data
+            % optional normalized = normalize flags for each
+            if nargin > 0 && isa(varargin{1},'glmu.Array'), obj = varargin{1}; return, end
             obj.id = obj.state.array.New(1);
             obj.Edit(varargin{:});
         end
 
         function Edit(obj,buffer,normalized)
+            % buffer = glmu.Buffer | buffer data
+            % optional normalized = normalize flags for each, default false
             if nargin < 2, return, end
             if nargin < 3, normalized = false; end
             if ~isa(buffer,'glmu.Buffer')
@@ -25,7 +30,6 @@ classdef Array < glmu.internal.Object
                 buffer.Bind(i);
                 sz = buffer.sz(i,1);
                 type = buffer.type(i);
-
                 obj.gl.glVertexAttribPointer(i-1,sz,type,obj.norm(i),0,0);
                 obj.gl.glEnableVertexAttribArray(i-1)
             end

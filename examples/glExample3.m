@@ -1,10 +1,9 @@
 classdef glExample3 < glCanvas
-    % Same as glExample2, but using some home made gl utility to
-    % abstract all the process of creating and managing buffers, vertex
-    % arrays and shaders
+    % Same as glExample2, but using glmu to simplify objects creation and management
     
     properties
-        myTriangle
+        myVertexArray
+        myProgram
     end
     
     methods
@@ -15,21 +14,33 @@ classdef glExample3 < glCanvas
         
         function InitFcn(obj,d,gl)
             gl.glClearColor(0,0,0,1);
-            glmu.SetResourcesPath(fileparts(mfilename('fullpath')));
             
             % data
             vertex = single([-0.8 -0.8 0 ; 0.8 -0.8 0 ; 0 0.9 0]);
             color = single([1 0 0 ; 0 1 0 ; 0 0 1]);
+
+            B = glmu.Buffer(gl.GL_ARRAY_BUFFER,{vertex',color'});
+
+            obj.myVertexArray = glmu.Array(B);
             
-            obj.myTriangle = glmu.DrawableArray({vertex',color'},'example1',gl.GL_TRIANGLES);
+            shaderDir = fullfile(fileparts(mfilename('fullpath')),'shaders');
+
+            vertSource = fileread(fullfile(shaderDir,'example1.vert.glsl'));
+            vertShader = glmu.Shader(gl.GL_VERTEX_SHADER,vertSource);
+            
+            fragSource = fileread(fullfile(shaderDir,'example1.frag.glsl'));
+            fragShader = glmu.Shader(gl.GL_FRAGMENT_SHADER,fragSource);
+            
+            obj.myProgram = glmu.Program({vertShader fragShader});
         end
         
         function UpdateFcn(obj,d,gl)
             gl.glClear(gl.GL_COLOR_BUFFER_BIT);
             
-            obj.myTriangle.Draw;
+            obj.myVertexArray.Bind;
+            obj.myProgram.Use;
+            gl.glDrawArrays(gl.GL_TRIANGLES,0,3);
             
-            % update display
             d.swapBuffers;
         end
         

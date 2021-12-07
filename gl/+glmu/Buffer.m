@@ -9,6 +9,12 @@ classdef Buffer < glmu.internal.Object
     
     methods
         function obj = Buffer(target,data,varargin)
+            % target = GL buffer target
+            % data = data | {data data}
+            %   [m x n] where m is the number of elements per vertex and n is the number of vertices
+            %   if data is [], the buffer is created but not set
+            %   multiple empty possible with { [] , [] }
+            % optional usage = GL usage, default GL_STATIC_DRAW
             obj.target = obj.Const(target);
             [data,n] = obj.ValidData(data);
             obj.id = obj.state.buffer.New(n);
@@ -23,6 +29,10 @@ classdef Buffer < glmu.internal.Object
         end
 
         function Edit(obj,data,usage)
+            % data = data | {data data}
+            %   [m x n] where m is the number of elements per vertex and n is the number of vertices
+            %   if data is [], the buffer is not set. {[] data} only sets the second buffer
+            % optional usage = GL usage, default GL_STATIC_DRAW
             if nargin < 3, usage = obj.gl.GL_STATIC_DRAW; end
             [data,nd] = obj.ValidData(data);
             usage = obj.Const(usage,nd);

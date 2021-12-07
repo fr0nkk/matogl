@@ -1,4 +1,4 @@
-classdef glExample4 < glCanvas
+classdef glExample5 < glCanvas
     
     properties
         cam single = [-45 0 -135 0 0 -3]; % [rotation translation]
@@ -14,7 +14,7 @@ classdef glExample4 < glCanvas
     end
     
     methods
-        function obj = glExample4()
+        function obj = glExample5()
             % create java frame
             frame = jFrame('Utility Examples',obj.sz);
             
@@ -28,7 +28,6 @@ classdef glExample4 < glCanvas
         end
         
         function InitFcn(obj,d,gl)
-            % init shaders
             glmu.SetResourcesPath(fileparts(mfilename('fullpath')));
 
             % make axes
@@ -44,7 +43,7 @@ classdef glExample4 < glCanvas
             [x,y,z] = ndgrid(w,w,w);
             xyz = [x(:) y(:) z(:)] + rand(N^3,3)./N; % remove the +rand for some funky patterns
             col = xyz;
-            obj.colorcube = glmu.DrawableArray({xyz',col'},'example1',gl.GL_POINTS);
+            obj.colorcube = glmu.DrawableArray({xyz',col'},'example1','GL_POINTS'); % all GL constant args can also be set as text
             obj.colorcube.uni.model = MTrans3D([0.1 0.1 0.3]) * MScale3D(0.25);
             
             % make ortho image
@@ -52,14 +51,13 @@ classdef glExample4 < glCanvas
             ijNorm = single([0 0;1 0;0 1;1 1]');
             pos = ijNorm./1.5+0.2; pos(3,:) = 0;
             obj.img2D = glmu.DrawableArray({pos,ijNorm},'example2',gl.GL_TRIANGLE_STRIP);
-            T = glmu.Texture(0,gl.GL_TEXTURE_2D,2,im,gl.GL_RGB,2);
+            T = glmu.Texture(0,gl.GL_TEXTURE_2D,im,gl.GL_RGB,2);
             obj.img2D.AddTexture('texture1',T);
             
             % make perspective image
-            obj.img3D = glmu.DrawableArray({pos,ijNorm},'example2#2',gl.GL_TRIANGLE_STRIP);
-            T = glmu.Texture(1,gl.GL_TEXTURE_2D,2,'peppers.png',gl.GL_RGB,2);
+            obj.img3D = glmu.DrawableArray({pos,ijNorm},'example2#2',gl.GL_TRIANGLE_STRIP); % #2 uses the 2nd instance of the same program
+            T = glmu.Texture(1,gl.GL_TEXTURE_2D,'peppers.png',gl.GL_RGB,2); % texture data can also be a path to an image
             obj.img3D.AddTexture('texture1',T);
-
 
             model = MTrans3D([0.9 0 0.8]) * MRot3D([90 0 180],1);
             obj.text3D = glmu.Text('arial','Perspective',0.1,[1 1 0 1],model);
@@ -72,12 +70,11 @@ classdef glExample4 < glCanvas
         end
         
         function UpdateFcn(obj,d,gl)
-            
             % d is the GLDrawable
             % gl is the GL object
             
             % clear color and depth
-            gl.glClear(glFlags(gl,'GL_COLOR_BUFFER_BIT','GL_DEPTH_BUFFER_BIT'));
+            gl.glClear(glmu.BitFlags('GL_COLOR_BUFFER_BIT','GL_DEPTH_BUFFER_BIT'));
             
             % make the view transform matrix and set it in the shader
             m = MTrans3D(obj.cam(4:6)) * MRot3D(obj.cam(1:3),1,[1 3]);
@@ -87,23 +84,13 @@ classdef glExample4 < glCanvas
             obj.text3D.view = m;
             obj.text3D.model{2} = MTrans3D([0.9 0 0.5]) * MRot3D(-obj.cam(1:3),1);
 
-            obj.img2D.Draw();
-            obj.img3D.Draw();
-            obj.origin.Draw();
-            obj.colorcube.Draw();
+            obj.img2D.Draw;
+            obj.img3D.Draw;
+            obj.origin.Draw;
+            obj.colorcube.Draw;
             
-            obj.text3D.Draw();
-            obj.text2D.Draw();
-
-
-%             transfText =  MTrans3D([0.9 0 0.8]) * MRot3D([90 0 180],1);
-%             obj.text.Render3D(gl,'Arial','perspective',0.1,[1 1 0 1],m * transfText);
-%             
-%             transfText =  MTrans3D([0.9 0 0.5]) * MRot3D(-obj.cam(1:3),1);
-%             obj.text.Render3D(gl,'Arial','normal',0.1,[1 1 0 1],m * transfText);
-%             
-%             transfText =  MTrans3D(single([20 20 0]));
-%             obj.text.Render2D(gl,'Arial','ortho',18,[1 1 0 1],transfText);
+            obj.text3D.Draw;
+            obj.text2D.Draw;
             
             % update display
             d.swapBuffers;

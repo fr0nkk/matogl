@@ -7,6 +7,9 @@ classdef Shader < glmu.internal.Object
     
     methods
         function obj = Shader(type,source,varargin)
+            % type = GL shader type
+            % source = 'shader source'
+            % optional preproc : char array to append up top to source
             obj.type = obj.Const(type);
             obj.id = obj.state.shader.New(obj.type);
             
@@ -17,6 +20,8 @@ classdef Shader < glmu.internal.Object
         end
 
         function Source(obj,source,preproc)
+            % source = 'shader source'
+            % optional preproc : char array to append up top to source
             if nargin > 2
                 k = find(source==newline,1);
                 source = insertAfter(source,k,[preproc newline]);
@@ -49,7 +54,10 @@ classdef Shader < glmu.internal.Object
         end
 
         function [uniName,type] = GetUniforms(obj)
-            str = regexp(obj.src,'uniform\s+\w+.*?\s+\w+.*?;','match')';
+            str = obj.src;
+            str = regexprep(str,'/\*.*?\*/',''); % remove /* ... */
+            str = regexprep(str,'//.*?\n',''); %remove // ...
+            str = regexp(str,'uniform\s+\w+.*?\s+\w+.*?;','match')';
             str = cellfun(@(c) c(1:end-1),str,'uni',0);
             str = regexprep(str,'\[.*?\]','');
             str = regexprep(str,'=.*','');
