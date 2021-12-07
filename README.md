@@ -27,5 +27,5 @@ You need to define the following abstract methods. In each of these methods, the
   - Always called just before the `UpdateFcn(obj,d,gl)`, when needed.
   - This should contain your opengl resize pipeline.
 
-## Included gl utility
-There are a few included utility in the `gl` directory. None of them are absolutely needed to make your own application. However, they help a lot to abstract some opengl stuff. Feel free to make your own or to contribute to this project!
+## GL Matlab Utility (glmu)
+An utility package is included in `gl\+glmu`. The more advanced examples use it. It is not needed to make your own application. However, it helps a lot to abstract some opengl stuff. Feel free to make your own or to contribute to this project!
