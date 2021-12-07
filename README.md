@@ -1,6 +1,4 @@
 # MATLAB OpenGL
-![examples](https://user-images.githubusercontent.com/93832337/141909918-ce710200-c534-4bd3-a3f0-428569bae56b.png)
-
 Access the OpenGL rendering pipeline directly from matlab.
 
 No mex file, toolbox, or any other external library needed.
@@ -9,6 +7,14 @@ No mex file, toolbox, or any other external library needed.
 
 ## Examples
 A few examples are included, see `START_HERE.m` for a brief description of each of them.
+
+### 3D Viewer Example
+![Screenshot 2021-12-07 153637](https://user-images.githubusercontent.com/93832337/145102562-3cc09f72-08ba-433b-9840-32b8796a1f32.png)
+![Screenshot 2021-12-07 153653](https://user-images.githubusercontent.com/93832337/145102580-b2fb868e-75fd-4325-886f-e94005ad60fd.png)
+
+### Mandelbrot Viewer Example
+![Screenshot 2021-12-07 153529](https://user-images.githubusercontent.com/93832337/145102619-61f6f0d7-7512-41e2-8618-511df79a91d8.png)
+![Screenshot 2021-12-07 153624](https://user-images.githubusercontent.com/93832337/145102630-99aef90c-e75d-4d47-8cfe-5a781fb1e994.png)
 
 ## Making your own application
 The main starting point is the class `glCanvas`. Set it as a superclass for your application.
