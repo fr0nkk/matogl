@@ -4,8 +4,7 @@ classdef glExample3 < glCanvas
     % arrays and shaders
     
     properties
-        shaders
-        triangleElement
+        myTriangle
     end
     
     methods
@@ -16,21 +15,19 @@ classdef glExample3 < glCanvas
         
         function InitFcn(obj,d,gl)
             gl.glClearColor(0,0,0,1);
-            
-            shaderDir = fullfile(fileparts(mfilename('fullpath')),'shaders');
-            obj.shaders = glShaders(shaderDir);
+            glmu.SetResourcesPath(fileparts(mfilename('fullpath')));
             
             % data
             vertex = single([-0.8 -0.8 0 ; 0.8 -0.8 0 ; 0 0.9 0]);
             color = single([1 0 0 ; 0 1 0 ; 0 0 1]);
             
-            obj.triangleElement = glElement(gl,{vertex',color'},'example1',obj.shaders,gl.GL_TRIANGLES);
+            obj.myTriangle = glmu.DrawableArray({vertex',color'},'example1',gl.GL_TRIANGLES);
         end
         
         function UpdateFcn(obj,d,gl)
             gl.glClear(gl.GL_COLOR_BUFFER_BIT);
             
-            obj.triangleElement.Draw(gl)
+            obj.myTriangle.Draw;
             
             % update display
             d.swapBuffers;

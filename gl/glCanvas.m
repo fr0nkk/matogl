@@ -30,16 +30,16 @@ classdef glCanvas < javacallbackmanager
             % varargin are arguments you want to pass to InitFcn(obj,d,gl,varargin)
 
             assert(isa(parent,'jFrame'),'parent argument must be jFrame()');
-            import com.jogamp.opengl.*;
+%             import com.jogamp.opengl.*;
             if nargin < 4, multisample = 0; end
             obj.parent = parent;
-            gp = GLProfile.get(glProfile);
-            cap = GLCapabilities(gp);
+            gp = com.jogamp.opengl.GLProfile.get(glProfile);
+            cap = com.jogamp.opengl.GLCapabilities(gp);
             if multisample
                 cap.setSampleBuffers(1);
                 cap.setNumSamples(multisample);
             end
-            obj.java = awt.GLCanvas(cap);
+            obj.java = com.jogamp.opengl.awt.GLCanvas(cap);
             
             parent.add(obj.java);
             obj.java.setAutoSwapBufferMode(false);
@@ -131,6 +131,10 @@ classdef glCanvas < javacallbackmanager
             obj.glStop = 1;
             obj.rmCallback;
             delete(obj.parent);
+            try
+                glmu.State(1);
+            catch
+            end
         end
         
     end
@@ -139,9 +143,7 @@ classdef glCanvas < javacallbackmanager
         function CheckError(gl)
             err = gl.glGetError();
             while err > 0
-                % make text orange
-                % https://undocumentedmatlab.com/articles/another-command-window-text-color-hack
-                disp(['[' 8 'GL Error 0x' dec2hex(err,4) ']' 8]);
+                softwarn(['GL Error 0x' dec2hex(err,4)])
                 err = gl.glGetError();
             end
         end

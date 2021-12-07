@@ -4,17 +4,13 @@ classdef glExample4 < glCanvas
         cam single = [-45 0 -135 0 0 -3]; % [rotation translation]
         click struct = struct('ij',[0 0],'cam',[0 0 0 0 0 0],'button',0);
         sz single = [600 450];
-        
-        % perspective params {verticalFov near far}
-        pParams = {45 0.1 200};
 
-        shaders
-        
         origin
         colorcube
         img2D
         img3D
-        text
+        text2D
+        text3D
     end
     
     methods
@@ -33,13 +29,14 @@ classdef glExample4 < glCanvas
         
         function InitFcn(obj,d,gl)
             % init shaders
-            obj.shaders = glShaders(fullfile(fileparts(mfilename('fullpath')),'shaders'));
+            glmu.SetResourcesPath(fileparts(mfilename('fullpath')));
 
             % make axes
             xyz = single([0 0 0 ; 1 0 0 ; 0 0 0 ; 0 1 0 ; 0 0 0 ; 0 0 1]');
             color = single([1 0 0 ; 1 0 0 ; 0 1 0 ; 0 1 0 ; 0 0 1 ; 0 0 1]');
-            obj.origin = glElement(gl,{xyz,color},'example1',obj.shaders,gl.GL_LINES);
-            obj.origin.uni.Mat4.model = eye(4,'single');
+            
+            obj.origin = glmu.DrawableArray({xyz,color},'example1',gl.GL_LINES);
+            obj.origin.uni.model = eye(4);
             
             % make color cube
             N = 32;
@@ -47,35 +44,35 @@ classdef glExample4 < glCanvas
             [x,y,z] = ndgrid(w,w,w);
             xyz = [x(:) y(:) z(:)] + rand(N^3,3)./N; % remove the +rand for some funky patterns
             col = xyz;
-            obj.colorcube = glElement(gl,{xyz',col'},'example1',obj.shaders,gl.GL_POINTS);
-            M = MTrans3D([0.1 0.1 0.3]) * MScale3D(0.25);
-            obj.colorcube.uni.Mat4.model = single(M);
+            obj.colorcube = glmu.DrawableArray({xyz',col'},'example1',gl.GL_POINTS);
+            obj.colorcube.uni.model = MTrans3D([0.1 0.1 0.3]) * MScale3D(0.25);
             
             % make ortho image
             im = imread('ngc6543a.jpg');
             ijNorm = single([0 0;1 0;0 1;1 1]');
             pos = ijNorm./1.5+0.2; pos(3,:) = 0;
-            obj.img2D = glElement(gl,{pos,ijNorm},'example2',obj.shaders,gl.GL_TRIANGLE_STRIP);
-            obj.img2D.AddTexture(gl,0,gl.GL_TEXTURE_2D,im,gl.GL_RGB);
-            obj.shaders.SetInt1(gl,'example2','texture1',0);
+            obj.img2D = glmu.DrawableArray({pos,ijNorm},'example2',gl.GL_TRIANGLE_STRIP);
+            T = glmu.Texture(0,gl.GL_TEXTURE_2D,2,im,gl.GL_RGB,2);
+            obj.img2D.AddTexture('texture1',T);
             
-            %make perspective image
-            obj.shaders.Init(gl,'example2','image2'); % instance an other example2 shader with different uniform values
-            obj.img3D = glElement(gl,{pos,ijNorm},'image2',obj.shaders,gl.GL_TRIANGLE_STRIP);
-            obj.img3D.AddTexture(gl,1,gl.GL_TEXTURE_2D,'peppers.png',gl.GL_RGB); % path to image is also valid
-            obj.shaders.SetInt1(gl,'image2','texture1',1);
-            
-            % init text renderer
-            obj.text = glText(gl,obj.shaders);
-            obj.text.SetOrtho(0,1);
-            obj.text.SetPerspective(obj.pParams{:});
-            
+            % make perspective image
+            obj.img3D = glmu.DrawableArray({pos,ijNorm},'example2#2',gl.GL_TRIANGLE_STRIP);
+            T = glmu.Texture(1,gl.GL_TEXTURE_2D,2,'peppers.png',gl.GL_RGB,2);
+            obj.img3D.AddTexture('texture1',T);
+
+
+            model = MTrans3D([0.9 0 0.8]) * MRot3D([90 0 180],1);
+            obj.text3D = glmu.Text('arial','Perspective',0.1,[1 1 0 1],model);
+            obj.text3D.Add('Normal',0.1,[1 1 0 1]);
+
+            obj.text2D = glmu.Text('arial','Ortho',18,[1 1 0 1],MTrans3D([-150 -100 0]));
             gl.glEnable(gl.GL_DEPTH_TEST);
             gl.glClearColor(0,0,0,0);
             
         end
         
         function UpdateFcn(obj,d,gl)
+            
             % d is the GLDrawable
             % gl is the GL object
             
@@ -85,25 +82,32 @@ classdef glExample4 < glCanvas
             % make the view transform matrix and set it in the shader
             m = MTrans3D(obj.cam(4:6)) * MRot3D(obj.cam(1:3),1,[1 3]);
             
-            obj.shaders.SetMat4(gl,'example1','view',m);
-            obj.shaders.SetMat4(gl,'image2','view',m);
+            obj.origin.uni.view = m;
+            obj.img3D.uni.view = m;
+            obj.text3D.view = m;
+            obj.text3D.model{2} = MTrans3D([0.9 0 0.5]) * MRot3D(-obj.cam(1:3),1);
+
+            obj.img2D.Draw();
+            obj.img3D.Draw();
+            obj.origin.Draw();
+            obj.colorcube.Draw();
             
-            obj.img2D.Draw(gl);
-            obj.img3D.Draw(gl);
-            obj.origin.Draw(gl);
-            obj.colorcube.Draw(gl);
-            
-            transfText =  MTrans3D([0.9 0 0.8]) * MRot3D([90 0 180],1);
-            obj.text.Render3D(gl,'Arial','perspective',0.1,[1 1 0 1],m * transfText);
-            
-            transfText =  MTrans3D([0.9 0 0.5]) * MRot3D(-obj.cam(1:3),1);
-            obj.text.Render3D(gl,'Arial','normal',0.1,[1 1 0 1],m * transfText);
-            
-            transfText =  MTrans3D(single([20 20 0]));
-            obj.text.Render2D(gl,'Arial','ortho',18,[1 1 0 1],transfText);
+            obj.text3D.Draw();
+            obj.text2D.Draw();
+
+
+%             transfText =  MTrans3D([0.9 0 0.8]) * MRot3D([90 0 180],1);
+%             obj.text.Render3D(gl,'Arial','perspective',0.1,[1 1 0 1],m * transfText);
+%             
+%             transfText =  MTrans3D([0.9 0 0.5]) * MRot3D(-obj.cam(1:3),1);
+%             obj.text.Render3D(gl,'Arial','normal',0.1,[1 1 0 1],m * transfText);
+%             
+%             transfText =  MTrans3D(single([20 20 0]));
+%             obj.text.Render2D(gl,'Arial','ortho',18,[1 1 0 1],transfText);
             
             % update display
             d.swapBuffers;
+            
         end
         
         function MousePressed(obj,~,evt)
@@ -146,11 +150,12 @@ classdef glExample4 < glCanvas
             gl.glViewport(0,0,newSz(1),newSz(2));
             
             % Update the projection matrix
-            m = MProj3D('F',[newSz(1)/newSz(2) obj.pParams{:}],1);
-            obj.shaders.SetMat4(gl,'example1','projection',single(m));
-            obj.shaders.SetMat4(gl,'image2','projection',single(m));
-            
-            obj.text.Reshape(newSz); 
+            m = MProj3D('F',[obj.sz(1)/obj.sz(2) 45 0.1 200],1);
+
+            obj.origin.program.uniforms.projection.Set(m);
+            obj.img3D.program.uniforms.projection.Set(m);
+            obj.text3D.projection = m;
+            obj.text2D.projection = MProj3D('O',[obj.sz -1 1]);
         end
         
         

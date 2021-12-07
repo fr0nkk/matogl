@@ -32,7 +32,8 @@ classdef glViewer3D < glCanvas
         MView single
         MProj single
         
-        shaders
+        ptcloudProgram
+        framebuffer
 
         points
         axe
@@ -86,31 +87,31 @@ classdef glViewer3D < glCanvas
             obj.pos0 = mean(pos,1,'omitnan');
             pos = single(double(pos) - double(obj.pos0));
             
-            obj.shaders = glShaders(fullfile(fileparts(mfilename('fullpath')),'shaders'));
             obj.Init(jFrame('GL 3D Viewer'),'GL3',0,pos,col,p.Results.idx,p.Results.edl);
             
-            obj.setMethodCallback('MousePressed')
-            obj.setMethodCallback('MouseReleased')
-            obj.setMethodCallback('MouseDragged')
-            obj.setMethodCallback('MouseWheelMoved')
+            obj.setMethodCallback('MousePressed');
+            obj.setMethodCallback('MouseReleased');
+            obj.setMethodCallback('MouseDragged');
+            obj.setMethodCallback('MouseWheelMoved');
             obj.parent.setCallback('WindowClosing',@obj.WindowClosing);
         end
         
-        function InitFcn(obj,d,gl,pos,col,idx,edl)
-
+        function InitFcn(obj,~,gl,pos,col,idx,edl)
+            glmu.SetResourcesPath(fileparts(mfilename('fullpath')));
             if isempty(idx)
                 primitive = gl.GL_POINTS;
             else
                 primitive = gl.GL_TRIANGLES;
             end
-
-            obj.points = glElement(gl,{pos',col'},'pointcloud',obj.shaders,primitive,gl.GL_STATIC_DRAW,[gl.GL_FALSE gl.GL_TRUE]);
+            obj.ptcloudProgram = glmu.Program('pointcloud');
+            array = glmu.Array({pos',col'},[false true]);
+            obj.points = glmu.DrawableArray(array,obj.ptcloudProgram,primitive);
             
             if ~isempty(idx)
-                obj.points.SetIndex(gl,idx');
+                obj.points.SetElement(idx');
             end
             
-            obj.points.uni.Mat4.model = eye(4,'single');
+            obj.points.uni.model = eye(4);
 
             camDist = max(max(pos,[],1) - min(pos,[],1));
             if camDist > 0
@@ -127,29 +128,35 @@ classdef glViewer3D < glCanvas
 
             axe_pos = single([0 0 0 ; 1 0 0 ; 0 0 0 ; 0 1 0 ; 0 0 0 ; 0 0 1]');
             axe_col = single([1 0 0 ; 1 0 0 ; 0 1 0 ; 0 1 0 ; 0 0 1 ; 0 0 1]');
-            obj.axe = glElement(gl,{axe_pos,axe_col},'pointcloud',obj.shaders,gl.GL_LINES);
-            obj.axe.uni.Mat4.model = eye(4,'single');
+
+            obj.axe = glmu.DrawableArray({axe_pos,axe_col},obj.ptcloudProgram,gl.GL_LINES);
+
+            obj.axe.uni.model = eye(4);
             obj.axe.show = 0;
             
             quadVert = single([-1 -1 0 0; -1 1 0 1; 1 -1 1 0; 1 1 1 1]');
-            obj.screen = glElement(gl,quadVert,'screen',obj.shaders,gl.GL_TRIANGLE_STRIP);
-            obj.screen.AddTexture(gl,0,gl.GL_TEXTURE_2D,[],[],gl.GL_LINEAR,gl.GL_LINEAR);
-            obj.shaders.SetInt1(gl,'screen','colorTex',0);
-            obj.shaders.SetFloat1(gl,'screen','edlStrength',single(obj.cam.E));
+            obj.screen = glmu.DrawableArray(quadVert,'screen',gl.GL_TRIANGLE_STRIP);
+
+            T = glmu.Texture(0,gl.GL_TEXTURE_2D,2);
+
+            obj.screen.AddTexture('colorTex',T);
+
+            obj.screen.program.uniforms.edlStrength.Set(obj.cam.E);
             
             obj.clearFlag = glFlags(gl,'GL_COLOR_BUFFER_BIT','GL_DEPTH_BUFFER_BIT');
             
             gl.glClearColor(0,0,0,0);
             
-            obj.ResizeFcn(d,gl);
-            
-            obj.screen.SetFramebuffer(gl,gl.GL_DEPTH_ATTACHMENT);
+            renderbuffer = glmu.Renderbuffer(gl.GL_DEPTH_COMPONENT32F);
+            renderbuffer.AddTexture(T,gl.GL_FLOAT,gl.GL_RGBA,gl.GL_RGBA32F);
+            renderbuffer.Resize([100 100]);
+            obj.framebuffer = glmu.Framebuffer(gl.GL_FRAMEBUFFER,renderbuffer,gl.GL_DEPTH_ATTACHMENT);
         end
         
         function UpdateFcn(obj,d,gl)
-
             % render to texture
-            obj.screen.UseFramebuffer(gl);
+            obj.framebuffer.Bind;
+            
 
             gl.glEnable(gl.GL_DEPTH_TEST);
             gl.glClear(obj.clearFlag);
@@ -160,20 +167,20 @@ classdef glViewer3D < glCanvas
             
             s = obj.figSize;
             obj.MProj = MProj3D('P',[[s/mean(s) obj.cam.F].*near far]);
-            obj.shaders.SetMat4(gl,'pointcloud','projection',obj.MProj);
+            obj.ptcloudProgram.uniforms.projection.Set(obj.MProj);
             
             obj.MView = MTrans3D(obj.cam.T) * MRot3D(obj.cam.R,1,[1 3]) * MTrans3D(-obj.cam.O);
-            obj.shaders.SetMat4(gl,'pointcloud','view',obj.MView);
+            obj.ptcloudProgram.uniforms.view.Set(obj.MView);
             
-            obj.axe.Draw(gl);
-            obj.points.Draw(gl);
+            obj.axe.Draw();
+            obj.points.Draw();
 
             % render to screen
-            gl.glBindFramebuffer(gl.GL_FRAMEBUFFER,0);
+            obj.framebuffer.Release;
 
             gl.glDisable(gl.GL_DEPTH_TEST);
             gl.glClear(gl.GL_COLOR_BUFFER_BIT);
-            obj.screen.Draw(gl);
+            obj.screen.Draw();
             
             d.swapBuffers;
         end
@@ -182,12 +189,11 @@ classdef glViewer3D < glCanvas
             sz = [obj.java.getWidth,obj.java.getHeight];
             obj.figSize = sz;
             
-            obj.screen.EditTex(gl,0,{0,gl.GL_RGBA32F,sz(1),sz(2),0,gl.GL_RGBA,gl.GL_FLOAT,[]});
-            obj.screen.EditRenderbuffer(gl,gl.GL_DEPTH_COMPONENT32F,sz);
+            obj.framebuffer.renderbuffer.Resize(sz);
             
             gl.glViewport(0,0,sz(1),sz(2));
             
-            obj.shaders.SetVec2(gl,'screen','scrSz',single(sz));
+            obj.screen.program.uniforms.scrSz.Set(sz);
         end
         
         function MousePressed(obj,~,evt)
@@ -212,7 +218,7 @@ classdef glViewer3D < glCanvas
         end
         
         function p = glGetPoint(obj,~,gl,c)
-            obj.screen.UseFramebuffer(gl);
+            obj.framebuffer.Bind;
             gl.glReadBuffer(gl.GL_NONE);
             
             r = 2; % click radius (square box) px
@@ -243,7 +249,7 @@ classdef glViewer3D < glCanvas
             WC = WC(1:3)./WC(4);
             
             if ~any(isnan(WC))
-                obj.axe.uni.Mat4.model = MTrans3D(WC);
+                obj.axe.uni.model = MTrans3D(WC);
                 p = WC;
             end
         end
@@ -260,7 +266,7 @@ classdef glViewer3D < glCanvas
             if nargin < 3, updateFlag = 1; end
             [~,gl,temp] = obj.getContext; %#ok<ASGLU> temp is onCleanup()
             obj.cam.E = edl;
-            obj.shaders.SetFloat1(gl,'screen','edlStrength',single(edl));
+            obj.screen.program.uniforms.edlStrength.Set(edl);
             if updateFlag
                 obj.Update;
             end

@@ -11,6 +11,7 @@ in vec2 coords;
 #define _vec2 vec2
 #define _float float
 #endif
+
 uniform _float scale = 1.0;
 uniform _vec2 offset = vec2(0.0);
 uniform _vec2 ratio = vec2(1.0);

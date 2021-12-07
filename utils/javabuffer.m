@@ -1,8 +1,8 @@
-function [b,nb] = javabuffer(data)
+function [b,nb,jt,mt] = javabuffer(data)
 % returns a java.nio.[CLASS]Buffer
 % works with float, integer and char arrays
-
-[jt,nb] = javatype(class(data));
+mt = class(data);
+[jt,nb] = javatype(mt);
 sz = size(data);
 i = sz > 0;
 b = java.nio.([jt 'Buffer']).allocate(prod(sz(i)));

@@ -1,5 +1,5 @@
 classdef glExample1 < glCanvas
-    % Some "Hello World!" OpenGL example
+    % Some "Hello World!" OpenGL example using fixed function pipeline
     
     properties
         

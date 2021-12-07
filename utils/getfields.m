@@ -13,6 +13,10 @@ if isnumeric(varargin{1})
     varargin = varargin(2:end);
 end
 
+if numel(varargin) == 1 && iscell(varargin{1})
+    varargin = varargin{1};
+end
+
 v = cellfun(@(c) s.(c),varargin,'uni',0);
 
 if dim

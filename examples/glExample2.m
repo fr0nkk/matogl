@@ -1,5 +1,5 @@
 classdef glExample2 < glCanvas
-    % Same as glExample1, but using a shader to render.
+    % Same as glExample1, but using shader rendering pipeline
     
     properties
         prog

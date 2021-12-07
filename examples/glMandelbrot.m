@@ -2,15 +2,12 @@ classdef glMandelbrot < glCanvas
     
     properties
         sz = [600 450];
-        shaders
-        
-        M % glElement
+
+        prog
+        M % glmu.DrawableArray
         
         click = struct('xy',[0 0],'z',[0 0]);
         cmap single = [jet(128) ; flipud(jet(128))];
-        
-        f1 % Float1 or Double1
-        f2 % Vec2 or DVec2
     end
     
     methods
@@ -33,63 +30,65 @@ classdef glMandelbrot < glCanvas
         end
         
         function InitFcn(obj,~,gl,maxIter,deep)
-            obj.shaders = glShaders(fullfile(fileparts(mfilename('fullpath')),'shaders'));
+            glmu.SetResourcesPath(fileparts(mfilename('fullpath')));
             
             if deep
                 preproc = '#define DEEP';
-                obj.f1 = 'Double1';
-                obj.f2 = 'DVec2';
+                vtype = 'dvec2';
+                ftype = 'double';
             else
                 preproc = '';
-                obj.f1 = 'Float1';
-                obj.f2 = 'Vec2';
+                vtype = 'vec2';
+                ftype = 'float';
             end
-            
-            obj.shaders.Init(gl,'mandelbrot','mb',preproc);
+            obj.prog = glmu.Program('mandelbrot#2',2,preproc);
+            obj.prog.CacheUniform('offset',vtype);
+            obj.prog.CacheUniform('ratio',vtype);
+            obj.prog.CacheUniform('scale',ftype);
 
             vert = single([-1 -1;1 -1;-1 1;1 1]');
-            obj.M = glElement(gl,{vert},'mb',obj.shaders,gl.GL_TRIANGLE_STRIP);
+            obj.M = glmu.DrawableArray({vert},obj.prog,gl.GL_TRIANGLE_STRIP);
             
-            obj.M.uni.(obj.f2).offset = [-0.5 0];
-            obj.M.uni.(obj.f1).scale = 1.6;
-
-            obj.shaders.SetVec3(gl,'mb','cmap',obj.cmap);
-            obj.shaders.SetInt1(gl,'mb','maxIter',maxIter);
+            obj.M.uni.offset = [-0.5 0];
+            obj.M.uni.scale = 1.6;
+            
+            obj.prog.uniforms.cmap.Set(obj.cmap');
+            obj.prog.uniforms.maxIter.Set(maxIter);
             gl.glClearColor(0,0,0,0);
         end
         
         function UpdateFcn(obj,d,gl)
             gl.glClear(gl.GL_COLOR_BUFFER_BIT);
-            obj.M.Draw(gl);
+            obj.M.Draw();
             d.swapBuffers;
         end
         
         function ResizeFcn(obj,~,gl)
             obj.sz = [obj.java.getWidth obj.java.getHeight];
-            obj.shaders.(['Set' obj.f2])(gl,'mb','ratio',obj.sz/mean(obj.sz));
+            obj.prog.uniforms.ratio.Set(obj.sz/mean(obj.sz));
             gl.glViewport(0,0,obj.sz(1),obj.sz(2));
         end
 
         function MousePressed(obj,~,evt)
             obj.click.xy = [-evt.getX evt.getY];
-            obj.click.z = obj.M.uni.(obj.f2).offset;
+            obj.click.z = obj.M.uni.offset;
         end
         
         function MouseDragged(obj,~,evt)
             dxy = [-evt.getX evt.getY] - obj.click.xy;
-            s = obj.M.uni.(obj.f1).scale;
+            s = obj.M.uni.scale;
             dOffset = dxy ./ mean(obj.sz) * 2 * s;
-            obj.M.uni.(obj.f2).offset = obj.click.z + dOffset;
+            obj.M.uni.offset = obj.click.z + dOffset;
             obj.Update;
         end
         
         function MouseWheelMoved(obj,~,evt)
             z = evt.getUnitsToScroll / 30;
-            s = obj.M.uni.(obj.f1).scale;
+            s = obj.M.uni.scale;
             dxy = [evt.getX evt.getY] ./ obj.sz * 2 - 1; % scale to -1:1
             ratio = obj.sz/mean(obj.sz);
-            obj.M.uni.(obj.f1).scale = (1+z) .* s;
-            obj.M.uni.(obj.f2).offset = obj.M.uni.(obj.f2).offset + dxy.*[-1 1].* ratio * z * s;
+            obj.M.uni.scale = (1+z) .* s;
+            obj.M.uni.offset = obj.M.uni.offset + dxy.*[-1 1].* ratio * z * s;
             obj.Update;
         end
 
