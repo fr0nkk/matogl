@@ -19,10 +19,11 @@ classdef glViewer3D < glCanvas
     % Left click: orbit
     % Right click: pan
     % scroll wheel: zoom
+    % scroll click: zoom
     % ctrl + left click: display clicked coords in console
     %   *clicked coords are not 100% accurate since they are recalculated
     %   from the inverse projection.
-    % ctrl + middle click: zoom
+    % ctrl + middle click: adjust focal length
     % ctrl + right click: adjust EDL strength
     
     properties
