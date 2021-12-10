@@ -19,7 +19,6 @@ classdef glNBodySim < glCanvas
             frame = jFrame('HelloTriangle 3',[600 450]);
             obj.t = tic;
             obj.Init(frame,'GL3');
-            obj.setMethodCallback('MouseDragged');
             while 1
                 try
                     obj.Update;
