@@ -27,7 +27,7 @@ classdef Array < glmu.internal.Object
             obj.norm = obj.Const(normalized,nb);
             obj.Bind;
             for i=1:nb
-                buffer.Bind(i);
+                buffer.Bind(i,obj.gl.GL_ARRAY_BUFFER);
                 sz = buffer.sz(i,1);
                 type = buffer.type(i);
                 obj.gl.glVertexAttribPointer(i-1,sz,type,obj.norm(i),0,0);

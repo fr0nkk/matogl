@@ -1,0 +1,76 @@
+classdef glNBodySim < glCanvas
+    
+    properties
+        gravity
+        particles
+        attractors
+        
+        workgroupsize = 32
+        nParticles = 64
+        maxWeight = 100000;
+        minWeight = 1000;
+        G = 0.1
+
+        t
+    end
+    
+    methods
+        function obj = glNBodySim()
+            frame = jFrame('HelloTriangle 3',[600 450]);
+            obj.t = tic;
+            obj.Init(frame,'GL3');
+            obj.setMethodCallback('MouseDragged');
+            while 1
+                try
+                    obj.Update;
+                catch
+                    break
+                end
+            end
+        end
+        
+        function InitFcn(obj,d,gl)
+            glmu.SetResourcesPath(fileparts(mfilename('fullpath')));
+
+            gl.glClearColor(0,0,0,1);
+            preproc = sprintf('#define WORKGROUPSIZE %i',obj.workgroupsize);
+            obj.gravity = glmu.Program('gravity',1,preproc);
+            obj.gravity.uniforms.G.Set(obj.G);
+            
+            pos = rand(obj.nParticles,3,'single')*2-1;
+            pos = pos.*150;
+            pos(:,3) = 0;
+            pos(:,4) = rand(size(pos,1),1).*(obj.maxWeight - obj.minWeight)+obj.minWeight;
+            vel = pos.*0;
+
+            buffer = glmu.Buffer(gl.GL_SHADER_STORAGE_BUFFER,{pos',vel'});
+            
+            obj.attractors = glmu.DrawableArray(buffer,'particle',gl.GL_POINTS);
+            obj.attractors.program.uniforms.maxWeight.Set(obj.maxWeight);
+
+            buffer.BindBase(0,1);
+            buffer.BindBase(1,2);
+
+        end
+        
+        function UpdateFcn(obj,d,gl)
+            gl.glClear(gl.GL_COLOR_BUFFER_BIT);
+
+            obj.gravity.uniforms.dt.Set(toc(obj.t));
+            obj.t = tic;
+            obj.gravity.Dispatch(ceil(obj.nParticles/obj.workgroupsize),1,1);
+            gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT);
+            
+            obj.attractors.Draw;
+            
+            d.swapBuffers;
+        end
+        
+        function ResizeFcn(obj,d,gl)
+            sz = [obj.java.getWidth,obj.java.getHeight];
+            gl.glViewport(0,0,sz(1),sz(2));
+            obj.attractors.program.uniforms.projection.Set(MProj3D('O',[sz -1 1]));
+        end
+    end
+end
+

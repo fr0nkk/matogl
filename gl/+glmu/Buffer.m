@@ -23,9 +23,10 @@ classdef Buffer < glmu.internal.Object
             obj.Edit(data,varargin{:});
         end
 
-        function Bind(obj,i)
+        function i = Bind(obj,i,target)
             if nargin < 2 && numel(obj.id) == 1, i = 1; end
-            obj.state.buffer.Bind(obj.target,obj.id(i));
+            if nargin < 3, target = obj.target; end
+            obj.state.buffer.Bind(target,obj.id(i));
         end
 
         function Edit(obj,data,usage)
@@ -47,6 +48,11 @@ classdef Buffer < glmu.internal.Object
                 obj.type(i) = obj.Const(['GL_' utypes{startsWith(mt,'u')+1} upper(jt)]);
                 obj.usage(i,1) = usage(i);
             end
+        end
+
+        function BindBase(obj,ibase,varargin)
+            i = obj.Bind(varargin{:});
+            obj.gl.glBindBufferBase(obj.target,ibase,obj.id(i));
         end
     end
     methods(Static)

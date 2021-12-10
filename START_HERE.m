@@ -28,3 +28,8 @@ glMandelbrot(100,false);
 % max 5000 iterations, double precision (for big boy GPU)
 % glMandelbrot(5000,true);
 
+% Example of compute shader usage : N body gravity simulation
+% Close the window or ctrl+c to stop the simulation
+% glNBodySim();
+
+

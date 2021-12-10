@@ -3,7 +3,6 @@ classdef Program < glmu.internal.Object
     properties
         shaders
         uniforms = struct;
-        subResourcesDir = 'shaders'
     end
     
     properties(Access=private)
@@ -15,6 +14,7 @@ classdef Program < glmu.internal.Object
                         'frag' 'GL_FRAGMENT_SHADER'
                         'comp' 'GL_COMPUTE_SHADER'                        
                         };
+        subResourcesDir = 'shaders'
     end
     
     methods
@@ -91,6 +91,11 @@ classdef Program < glmu.internal.Object
 
         function Use(obj)
             obj.state.program.Use(obj.id);
+        end
+
+        function Dispatch(obj,x,y,z)
+            obj.Use;
+            obj.gl.glDispatchCompute(x,y,z);
         end
 
         function AutoCacheUniforms(obj,action)
