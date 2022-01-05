@@ -41,7 +41,7 @@ classdef glMandelbrot < glCanvas
                 vtype = 'vec2';
                 ftype = 'float';
             end
-            obj.prog = glmu.Program('mandelbrot#2',2,preproc);
+            obj.prog = glmu.Program('mandelbrot',2,preproc);
             obj.prog.CacheUniform('offset',vtype);
             obj.prog.CacheUniform('ratio',vtype);
             obj.prog.CacheUniform('scale',ftype);

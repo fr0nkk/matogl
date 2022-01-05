@@ -18,33 +18,37 @@ layout( local_size_x = WORKGROUPSIZE, local_size_y = 1, local_size_z = 1 ) in;
 void main(){
 uint gid = gl_GlobalInvocationID.x;
 
-vec4 p = APos[gid];
+vec3 p = APos[gid].xyz;
 vec3 v = AVel[gid].xyz;
 
-
-vec3 F = vec3(0.0);
-vec3 L;
+vec3 acc = vec3(0.0);
+vec4 L = vec4(0,0,0,10);
 vec4 p2;
 float R;
 
-//F = G*m1*m2/(r*r)
 for (int i=0;i<APos.length();i++)
 {
 if(i==gid) continue;
 p2 = APos[i];
-L = p2.xyz-p.xyz;
-R = max(10.0,length(L)); // avoid particles flying out
-R = min(R,1000.0); // try to attract back far particles
-F = F + G*p.w*p2.w/pow(R,2)*normalize(L);
+L.xyz = p2.xyz-p.xyz;
+R = length(L);
+acc += p2.w/pow(R,3)*L.xyz;
+}
+acc = acc * G;
+
+barrier();
+memoryBarrier();
+
+v += acc*dt/2;
+p += v*dt;
+v += acc*dt/2;
+
+APos[gid].xyz = p;
+AVel[gid].xyz = v;
 }
 
+//F = G*m1*m2/(r*r)
 // a = F/m;
 // v = v + a*t
 // v = v + F/m*t
-v += F / p.w * dt;
-
 // x = x + v*t
-p.xyz += v * dt;
-APos[gid].xyz = p.xyz;
-AVel[gid].xyz = v;
-}

@@ -7,7 +7,7 @@ classdef glExample4 < glCanvas
     
     methods
         function obj = glExample4()
-            frame = jFrame('HelloTriangle 3',[600 450]);
+            frame = jFrame('HelloTriangle 4',[600 450]);
             obj.Init(frame,'GL3');
         end
         

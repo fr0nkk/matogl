@@ -36,11 +36,13 @@ classdef glNBodySim < glCanvas
             obj.gravity = glmu.Program('gravity',1,preproc);
             obj.gravity.uniforms.G.Set(obj.G);
             
-            pos = rand(obj.nParticles,3,'single')*2-1;
-            pos = pos.*150;
-            pos(:,3) = 0;
+            pos = randn(obj.nParticles,3,'single');
+            pos = pos.*[100 100 0];
             pos(:,4) = rand(size(pos,1),1).*(obj.maxWeight - obj.minWeight)+obj.minWeight;
+
             vel = pos.*0;
+            a = atan2(pos(:,2),pos(:,1))+pi/2;
+            vel(:,1:2) = [cos(a) sin(a)].*10;
 
             buffer = glmu.Buffer(gl.GL_SHADER_STORAGE_BUFFER,{pos',vel'});
             
@@ -68,7 +70,7 @@ classdef glNBodySim < glCanvas
         function ResizeFcn(obj,d,gl)
             sz = [obj.java.getWidth,obj.java.getHeight];
             gl.glViewport(0,0,sz(1),sz(2));
-            obj.attractors.program.uniforms.projection.Set(MProj3D('O',[sz -1 1]));
+            obj.attractors.program.uniforms.projection.Set(MProj3D('O',[sz -1000 1000]));
         end
     end
 end
