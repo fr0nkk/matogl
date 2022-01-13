@@ -31,16 +31,12 @@ classdef Shader < glmu.internal.Object
         end
 
         function [v,b] = Get(obj,name)
-            b = javabuffer(int32(0));
-            obj.gl.glGetShaderiv(obj.id,obj.Const(name),b);
-            v = b.array;
+            [v,b] = glmu.Get(obj.gl,@glGetShaderiv,{obj.id,obj.Const(name)});
         end
 
         function str = InfoLog(obj)
             [n,b] = obj.Get(obj.gl.GL_INFO_LOG_LENGTH);
-            strb = javabuffer(zeros(n,1,'uint8'));
-            obj.gl.glGetShaderInfoLog(obj.id,n,b,strb);
-            str = char(strb.array');
+            str = char(glmu.Get(obj.gl,@glGetShaderInfoLog,{obj.id,n,b},n,'uint8'))';
         end
 
         function Compile(obj)

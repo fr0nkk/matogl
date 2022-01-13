@@ -68,16 +68,12 @@ classdef Program < glmu.internal.Object
         end
 
         function [v,b] = Get(obj,name)
-            b = javabuffer(int32(0));
-            obj.gl.glGetProgramiv(obj.id,obj.Const(name,1),b);
-            v = b.array;
+            [v,b] = glmu.Get(obj.gl,@glGetProgramiv,{obj.id,obj.Const(name)});
         end
 
         function str = InfoLog(obj)
             [n,b] = obj.Get(obj.gl.GL_INFO_LOG_LENGTH);
-            strb = javabuffer(zeros(n,1,'uint8'));
-            obj.gl.glGetProgramInfoLog(obj.id,n,b,strb);
-            str = char(strb.array');
+            str = char(glmu.Get(obj.gl,@glGetProgramInfoLog,{obj.id,n,b},n,'uint8'))';
         end
 
         function Link(obj)
