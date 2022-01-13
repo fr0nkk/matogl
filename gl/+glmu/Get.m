@@ -4,7 +4,6 @@ if nargin < 5, type = 'int32'; end
 
 b = javabuffer(zeros(nb,1,type));
 if ischar(args)
-    gl = glmu.internal.getgl;
     args = gl.(args);
 end
 if ~iscell(args), args = {args}; end
