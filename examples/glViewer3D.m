@@ -30,8 +30,8 @@ classdef glViewer3D < glCanvas
         figSize
         pos0 % mean of point locations
         
-        MView single
-        MProj single
+        MView
+        MProj
         
         ptcloudProgram
         framebuffer
@@ -41,7 +41,7 @@ classdef glViewer3D < glCanvas
         screen
         
         % camOrigin, camRotation, camTranslation, focalLength, EDL Strength
-        cam = struct('O',[0 0 0]','R',[-45 0 -45]','T',[0 0 -1]','F',1,'E',0.2);
+        cam = struct('O',[0 0 0]','R',[-45 0 -45]','T',[0 0 -1]','F',1,'E',0.1);
         click
         
         clearFlag
@@ -67,7 +67,7 @@ classdef glViewer3D < glCanvas
             p = inputParser;
             p.addOptional('col',[]);
             p.addOptional('idx',[]);
-            p.addParameter('edl',[]);
+            p.addParameter('edl',obj.cam.E);
             p.parse(varargin{:});
             
             col = p.Results.col;
@@ -88,7 +88,8 @@ classdef glViewer3D < glCanvas
             obj.pos0 = mean(pos,1,'omitnan');
             pos = single(double(pos) - double(obj.pos0));
             
-            obj.Init(jFrame('GL 3D Viewer'),'GL3',0,pos,col,p.Results.idx,p.Results.edl);
+            obj.cam.E = p.Results.edl;
+            obj.Init(jFrame('GL 3D Viewer'),'GL3',0,pos,col,p.Results.idx);
             
             obj.setMethodCallback('MousePressed');
             obj.setMethodCallback('MouseReleased');
@@ -97,7 +98,7 @@ classdef glViewer3D < glCanvas
             obj.parent.setCallback('WindowClosing',@obj.WindowClosing);
         end
         
-        function InitFcn(obj,~,gl,pos,col,idx,edl)
+        function InitFcn(obj,~,gl,pos,col,idx)
             glmu.SetResourcesPath(fileparts(mfilename('fullpath')));
             if isempty(idx)
                 primitive = gl.GL_POINTS;
@@ -114,13 +115,9 @@ classdef glViewer3D < glCanvas
             
             obj.points.uni.model = eye(4);
 
-            camDist = max(max(pos,[],1) - min(pos,[],1));
+            camDist = double(max(max(pos,[],1) - min(pos,[],1)));
             if camDist > 0
                 obj.cam.T(3) = -camDist*2;
-            end
-
-            if ~isempty(edl)
-                obj.cam.E = edl;
             end
 
             obj.click.button = 0;
@@ -229,7 +226,7 @@ classdef glViewer3D < glCanvas
             c(2) = s(2) - c(2);
             
             gl.glReadPixels(c(1)-r,c(2)-r,w,w,gl.GL_DEPTH_COMPONENT,gl.GL_FLOAT,b);
-            depth = reshape(b.array,w,w);
+            depth = double(reshape(b.array,w,w));
             
             p = [];
             n = depth == 1;
