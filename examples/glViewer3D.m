@@ -30,9 +30,6 @@ classdef glViewer3D < glCanvas
         figSize
         pos0 % mean of point locations
         
-        MView
-        MProj
-        
         ptcloudProgram
         framebuffer
 
@@ -40,9 +37,8 @@ classdef glViewer3D < glCanvas
         axe
         screen
         
-        % camOrigin, camRotation, camTranslation, focalLength, EDL Strength
-        cam = struct('O',[0 0 0]','R',[-45 0 -45]','T',[0 0 -1]','F',1,'E',0.1);
-        click
+        cam % glmu.Camera3D
+        edl0 = 0.1
         
         clearFlag
     end
@@ -67,7 +63,7 @@ classdef glViewer3D < glCanvas
             p = inputParser;
             p.addOptional('col',[]);
             p.addOptional('idx',[]);
-            p.addParameter('edl',obj.cam.E);
+            p.addParameter('edl',obj.edl0);
             p.parse(varargin{:});
             
             col = p.Results.col;
@@ -88,8 +84,7 @@ classdef glViewer3D < glCanvas
             obj.pos0 = mean(pos,1,'omitnan');
             pos = single(double(pos) - double(obj.pos0));
             
-            obj.cam.E = p.Results.edl;
-            obj.Init(jFrame('GL 3D Viewer'),'GL3',0,pos,col,p.Results.idx);
+            obj.Init(jFrame('GL 3D Viewer'),'GL3',0,pos,col,p.Results.idx,p.Results.edl);
             
             obj.setMethodCallback('MousePressed');
             obj.setMethodCallback('MouseReleased');
@@ -98,7 +93,7 @@ classdef glViewer3D < glCanvas
             obj.parent.setCallback('WindowClosing',@obj.WindowClosing);
         end
         
-        function InitFcn(obj,~,gl,pos,col,idx)
+        function InitFcn(obj,~,gl,pos,col,idx,edl)
             glmu.SetResourcesPath(fileparts(mfilename('fullpath')));
             if isempty(idx)
                 primitive = gl.GL_POINTS;
@@ -106,6 +101,8 @@ classdef glViewer3D < glCanvas
                 primitive = gl.GL_TRIANGLES;
             end
             obj.ptcloudProgram = glmu.Program('pointcloud');
+            u = obj.ptcloudProgram.uniforms;
+            obj.cam = glmu.Camera3D(u.projection,u.view);
             array = glmu.Array({pos',col'},[false true]);
             obj.points = glmu.DrawableArray(array,obj.ptcloudProgram,primitive);
             
@@ -117,12 +114,8 @@ classdef glViewer3D < glCanvas
 
             camDist = double(max(max(pos,[],1) - min(pos,[],1)));
             if camDist > 0
-                obj.cam.T(3) = -camDist*2;
+                obj.cam.viewParams.T(3) = -camDist*2;
             end
-
-            obj.click.button = 0;
-            obj.click.coords = [0 0];
-            obj.click.cam = obj.cam;
 
             axe_pos = single([0 0 0 ; 1 0 0 ; 0 0 0 ; 0 1 0 ; 0 0 0 ; 0 0 1]');
             axe_col = single([1 0 0 ; 1 0 0 ; 0 1 0 ; 0 1 0 ; 0 0 1 ; 0 0 1]');
@@ -139,7 +132,7 @@ classdef glViewer3D < glCanvas
 
             obj.screen.AddTexture('colorTex',T);
 
-            obj.screen.program.uniforms.edlStrength.Set(obj.cam.E);
+            obj.screen.program.uniforms.edlStrength.Set(edl);
             
             obj.clearFlag = glmu.BitFlags('GL_COLOR_BUFFER_BIT','GL_DEPTH_BUFFER_BIT');
             
@@ -154,21 +147,15 @@ classdef glViewer3D < glCanvas
             % render to texture
             obj.framebuffer.Bind;
             
-
             gl.glEnable(gl.GL_DEPTH_TEST);
             gl.glClear(obj.clearFlag);
             
-            camDist = -obj.cam.T(3);
+            camDist = -obj.cam.viewParams.T(3);
             near = clamp(camDist/10,1e-3,1);
             far = clamp(camDist*10,100,1e6);
-            
-            s = obj.figSize;
-            obj.MProj = MProj3D('P',[[s/mean(s) obj.cam.F].*near far]);
-            obj.ptcloudProgram.uniforms.projection.Set(obj.MProj);
-            
-            obj.MView = MTrans3D(obj.cam.T) * MRot3D(obj.cam.R,1,[1 3]) * MTrans3D(-obj.cam.O);
-            obj.ptcloudProgram.uniforms.view.Set(obj.MView);
-            
+            obj.cam.SetNearFar(near,far);
+
+            obj.cam.Update;
             obj.axe.Draw;
             obj.points.Draw;
 
@@ -185,7 +172,7 @@ classdef glViewer3D < glCanvas
         function ResizeFcn(obj,~,gl)
             sz = [obj.java.getWidth,obj.java.getHeight];
             obj.figSize = sz;
-            
+            obj.cam.Resize(sz);
             obj.framebuffer.Resize(sz);
             
             gl.glViewport(0,0,sz(1),sz(2));
@@ -194,23 +181,22 @@ classdef glViewer3D < glCanvas
         end
         
         function MousePressed(obj,~,evt)
-            obj.click.button = evt.getButton;
             c = getEvtXY(evt);
-            obj.click.coords = c;
             p = obj.glFcn(@obj.glGetPoint,c);
 
             if bitand(evt.CTRL_MASK,evt.getModifiers) && ~isempty(p) % ctrl pressed
                 fprintf('Point coords: %.3f, %.3f, %.3f\n',double(p)+obj.pos0');
             end
-            obj.setFocus(p);
-            obj.click.cam = obj.cam;
+            obj.edl0 = obj.screen.program.uniforms.edlStrength.lastValue;
+            obj.cam.SetRotationOrigin(p);
+            obj.cam.MousePressed(evt);
             obj.axe.show = 1;
             obj.Update
         end
         
-        function MouseReleased(obj,~,~)
-            obj.click.button = 0;
-            obj.axe.show = 0;
+        function MouseReleased(obj,~,evt)
+            obj.cam.MouseReleased(evt);
+            obj.axe.show = any(obj.cam.click.button);
             obj.Update;
         end
         
@@ -241,7 +227,7 @@ classdef glViewer3D < glCanvas
             NDC = [(c+[x-r-0.5 ; r-y+1.5])./s ; depth(k) ; 1].*2-1;
             
             % world coordinates
-            WC = obj.MProj * obj.MView \ NDC;
+            WC = obj.cam.MProj * obj.cam.MView \ NDC;
             WC = WC(1:3)./WC(4);
             
             if ~any(isnan(WC))
@@ -249,67 +235,28 @@ classdef glViewer3D < glCanvas
                 p = WC;
             end
         end
-        
-        function setFocus(obj,worldCoord)
-            if isempty(worldCoord), return, end
-            M =  MTrans3D(obj.cam.T) * MRot3D(obj.cam.R,1,[1 3]);
-            camTranslate = M * [worldCoord-obj.cam.O ; 1];
-            obj.cam.T = camTranslate(1:3);
-            obj.cam.O = worldCoord;
-        end
 
-        function SetEDL(obj,edl,updateFlag)
-            if nargin < 3, updateFlag = 1; end
+        function SetEDL(obj,edl)
             [~,gl,temp] = obj.getContext; %#ok<ASGLU> temp is onCleanup()
-            obj.cam.E = edl;
             obj.screen.program.uniforms.edlStrength.Set(edl);
-            if updateFlag
-                obj.Update;
-            end
         end
         
         function MouseDragged(obj,~,evt)
-            dxy = getEvtXY(evt) - obj.click.coords;
-            ctrlPressed = bitand(evt.CTRL_MASK,evt.getModifiers);
-            switch obj.click.button
-                case 1
-                    % left click
-                    % rotation: 0.2 deg/pixel
-                    obj.cam.R([3 1]) = obj.click.cam.R([3 1])+dxy*0.2;
-                case 2
-                    % middle click
-                    if ctrlPressed
-                        % focal length: half or double per 500 px
-                        s = 2^(dxy(2)./500);
-                        obj.cam.F = obj.click.cam.F * s;
-                    else
-                        % zoom: half or double camDistance per 100 px
-                        s = 2^(dxy(2)./100);
-                        obj.cam.T = obj.click.cam.T .* s;
-                    end
-                case 3
-                    % right click
-                    if ctrlPressed
-                        % EDL: half or double camDistance per 100 px
-                        s = obj.click.cam.E * 2^(dxy(2)./100);
-                        obj.SetEDL(s,0);
-                    else
-                        % translate 1:1 (clicked point follows mouse)
-                        c = obj.click.cam;
-                        dxy = dxy.*[1 -1]';
-                        obj.cam.T([1 2]) = c.T([1 2])+dxy./mean(obj.figSize).*-c.T(3)./c.F;
-                    end
-                otherwise
-                    return
+            if obj.cam.click.button(3) && bitand(evt.getModifiers,evt.CTRL_MASK)
+                % ctrl + right click
+                dxy = obj.cam.GetDxy(evt);
+                s = 2^(dxy(2)./100);
+                obj.SetEDL(obj.edl0.*s);
+            else
+                obj.cam.MouseDragged(evt);
             end
             obj.Update;
         end
         
         function MouseWheelMoved(obj,~,evt)
-            s = evt.getUnitsToScroll / 40;
             p = obj.glFcn(@obj.glGetPoint,getEvtXY(evt));
-            obj.setFocus(p);
-            obj.cam.T = obj.cam.T .* (1+s);
+            obj.cam.SetRotationOrigin(p);
+            obj.cam.MouseWheelMoved(evt);
             obj.Update;
         end
         
