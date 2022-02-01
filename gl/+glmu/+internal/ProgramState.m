@@ -2,6 +2,7 @@ classdef ProgramState < glmu.internal.ObjectState
     
     properties
         newFcn = @glCreateProgram
+        currentSubroutine = ''
     end
     
     properties(Access = private)
@@ -17,6 +18,7 @@ classdef ProgramState < glmu.internal.ObjectState
         function Use(obj,id)
             if obj.current == id, return, end
             obj.gl.glUseProgram(id);
+            obj.currentSubroutine = '';
             obj.current = id;
         end
 

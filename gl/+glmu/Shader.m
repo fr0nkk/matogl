@@ -53,6 +53,7 @@ classdef Shader < glmu.internal.Object
             str = obj.src;
             str = regexprep(str,'/\*.*?\*/',''); % remove /* ... */
             str = regexprep(str,'//.*?\n',''); %remove // ...
+            str = regexprep(str,'subroutine uniform .*?\n','');
             str = regexp(str,'uniform\s+\w+.*?\s+\w+.*?;','match')';
             str = cellfun(@(c) c(1:end-1),str,'uni',0);
             str = regexprep(str,'\[.*?\]','');
