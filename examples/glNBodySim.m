@@ -33,7 +33,7 @@ classdef glNBodySim < glCanvas
 
             gl.glClearColor(0,0,0,1);
             preproc = sprintf('#define WORKGROUPSIZE %i',obj.workgroupsize);
-            obj.gravity = glmu.Program('gravity',1,preproc);
+            obj.gravity = glmu.Program('gravity',preproc);
             obj.gravity.uniforms.G.Set(obj.G);
             
             pos = randn(obj.nParticles,3,'single');

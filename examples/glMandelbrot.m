@@ -34,17 +34,10 @@ classdef glMandelbrot < glCanvas
             
             if deep
                 preproc = '#define DEEP';
-                vtype = 'dvec2';
-                ftype = 'double';
             else
                 preproc = '';
-                vtype = 'vec2';
-                ftype = 'float';
             end
-            obj.prog = glmu.Program('mandelbrot',2,preproc);
-            obj.prog.CacheUniform('offset',vtype);
-            obj.prog.CacheUniform('ratio',vtype);
-            obj.prog.CacheUniform('scale',ftype);
+            obj.prog = glmu.Program('mandelbrot',preproc);
 
             vert = single([-1 -1;1 -1;-1 1;1 1]');
             obj.M = glmu.DrawableArray({vert},obj.prog,gl.GL_TRIANGLE_STRIP);

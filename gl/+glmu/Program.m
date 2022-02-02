@@ -3,6 +3,7 @@ classdef Program < glmu.internal.Object
     properties
         shaders
         uniforms = struct;
+        subroutine = struct; % .stage.name
     end
     
     properties(Access=private)
@@ -18,10 +19,9 @@ classdef Program < glmu.internal.Object
     end
     
     methods
-        function obj = Program(shaders,autoCacheUniforms,varargin)
+        function obj = Program(shaders,varargin)
             % shaders = glmu.Program | {glmu.Shader} | 'shaderName'
             %   when used with 'shaderName', add #N to select the instance N
-            % optional autoCacheUniforms : autoCacheAction (default 1)
             % optional preproc : char array to append up top before compilation
             if isa(shaders,'glmu.Program'), obj = shaders; return, end
             cacheProg = '';
@@ -37,10 +37,10 @@ classdef Program < glmu.internal.Object
             end
             obj.id = obj.state.program.New();
             if nargin > 0
-                if nargin < 2, autoCacheUniforms = 1; end
                 obj.Attach(shaders);
                 obj.Link();
-                obj.AutoCacheUniforms(autoCacheUniforms)
+                obj.DetectUniforms;
+                obj.DetectSubroutines
                 obj.state.program.SetCache(cacheProg,obj)
             end
         end
@@ -94,38 +94,31 @@ classdef Program < glmu.internal.Object
             obj.gl.glDispatchCompute(x,y,z);
         end
 
-        function AutoCacheUniforms(obj,action)
-            % action = 0 : do nothing and return
-            % action = 1 : auto find and cache glmu.Uniforms (default)
-            % action = 2 : like action 1 but with no warning
-            if nargin < 2, action = 1; end
-            if ~action, return, end
-            [uniName,type] = cellfun(@(c) c.GetUniforms,obj.shaders,'uni',0);
-            uniName = vertcat(uniName{:});
-            type = vertcat(type{:});
-            [uniName,iu] = unique(uniName);
-            type = type(iu);
-            for i = 1:numel(uniName)
-                try
-                    obj.CacheUniform(uniName{i},type{i});
-                catch
-                    if action == 1
-                        softwarn(['Error caching uniform ''' uniName{i} ''' of type ''' type{i} '''']);
-                    end
-                end
+        function DetectUniforms(obj)
+            nbUniforms = obj.Get(obj.gl.GL_ACTIVE_UNIFORMS);
+            c = 100;
+            bName = javabuffer(zeros(1,c,'uint8'));
+            bNameLen = javabuffer(int32(-1));
+            bNum = javabuffer(int32(-1));
+            bType = javabuffer(int32(-1));
+            for i=1:nbUniforms
+                obj.gl.glGetActiveUniform( obj.id, i-1, c-1, bNameLen, bNum, bType, bName );
+                name = bName.array';
+                name = char(name(1:bNameLen.array));
+                name = regexprep(name,'\[\d+\]','');
+                obj.uniforms.(name) = glmu.Uniform(obj,name,bType.array);
             end
-
         end
 
-        function CacheUniform(obj,name,type,varargin)
-            % name = uniform variable name
-            % type = glsl type | gl type (glUniform[type]v)
-            % optional transpose = true/false transpose if matrix
-            obj.uniforms.(name) = glmu.Uniform(obj,name,type,varargin{:});
-        end
-
-        function SetUniform(obj,name,value)
-            obj.uniforms.(name).Set(value);
+        function DetectSubroutines(obj)
+            for i=1:numel(obj.shaders)
+                type = obj.shaders{1}.type;
+                glTypeName = type2name(obj.gl,type);
+                typeName = obj.shaderTypes{strcmp(obj.shaderTypes(:,2),glTypeName),1};
+                nb = javabuffer(int32(-1));
+                obj.gl.glGetProgramStageiv(obj.id,type,obj.gl.GL_ACTIVE_SUBROUTINES,nb);
+                % todo
+            end
         end
 
         function SetUniforms(obj,uni)
@@ -137,5 +130,22 @@ classdef Program < glmu.internal.Object
         end
 
     end
+end
+
+function name = type2name(gl,type)
+persistent T
+if isempty(T)
+    names = {
+        'GL_VERTEX_SHADER'
+        'GL_TESS_CONTROL_SHADER'
+        'GL_TESS_EVALUATION_SHADER'
+        'GL_GEOMETRY_SHADER'
+        'GL_FRAGMENT_SHADER'
+        'GL_COMPUTE_SHADER'
+        };
+    types = getfields(gl,1,names);
+    T = table(names,types);
+end
+name = T.names{T.types == type};
 end
 

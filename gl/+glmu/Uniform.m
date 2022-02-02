@@ -13,19 +13,20 @@ classdef Uniform < glmu.internal.Object
         function obj = Uniform(program,name,type,transpose)
             % program = glmu.Program
             % name = uniform variable name
-            % type = glsl type | gl type (glUniform[type]v)
+            % type = GL_FLOAT_VEC3 etc
             % optional transpose = true/false transpose if matrix
             obj.prog = program;
             obj.id = obj.gl.glGetUniformLocation(program.id,name);
             if obj.id < 0
                 error(['Uniform location for ''' name ''' not found'])
             end
-            [type,obj.convertFcn] = ConvertType(type);
-            sz = str2double(regexp(type,'\d','match'));
-            isMatrix = startsWith(type,'Matrix');
+            type = obj.Const(type,1);
+            [setFcnStr,obj.convertFcn] = ConvertType(obj.gl,type,name);
+            sz = str2double(regexp(setFcnStr,'\d','match'));
+            isMatrix = startsWith(setFcnStr,'Matrix');
             if isMatrix && numel(sz) == 1, sz = [sz sz]; end
             obj.elemPerValue = prod(sz);
-            obj.setFcn = str2func(['glUniform' type 'v']);
+            obj.setFcn = str2func(['glUniform' setFcnStr 'v']);
             if isMatrix
                 if nargin < 5, transpose = false; end
                 obj.transpose = {obj.Const(transpose,1)};
@@ -57,55 +58,59 @@ classdef Uniform < glmu.internal.Object
     end
 end
 
-function [type,mlType] = ConvertType(type)
-persistent types
-if isempty(types)
-    slTypes1 = {  'bool'  'int'   'uint'   'float'  'double'}';
-    glTypes = {   'i'     'i'     'ui'     'f'      'd'}';
-    mlTypes = {   'int32' 'int32' 'uint32' 'single' 'double'}';
-    slvecTypes = {'b'    'i'   'u'    ''      'd'}';
-    slmatTypes = {'', 'd'}';
-    glmatTypes = {'f' 'd'}';
-    mlmatTypes = {'single' 'double'}';
-    n = {'2' '3' '4'}';
-    slvec = 'vec';
-    slmat = 'mat';
-    glmat = 'Matrix';
-    u1 = [slTypes1 strcat('1',glTypes) mlTypes];
-    u234 = cellfun(@(c) [strcat(slvecTypes,slvec,c) strcat(c,glTypes) mlTypes],n,'uni',0);
-    u234 = vertcat(u234{:});
-    m1 = cellfun(@(c) [strcat(slmatTypes,slmat,c) strcat(glmat,c,glmatTypes) mlmatTypes],n,'uni',0);
-    m1 = vertcat(m1{:});
-    nn = numel(n);
-    mX = cell(nn^2,1);
-    for i=1:nn
-        for j=1:nn
-            d = strjoin(n([i j]),'x');
-            mX{(i-1)*nn+j} = [strcat(slmatTypes,slmat,d) strcat(glmat,d,glmatTypes) mlmatTypes];
-        end
+function [setFcnStr,matFcn] = ConvertType(gl,type,name)
+    persistent T
+    if isempty(T) || ~ismember(type,T.glType)
+        % build lookup
+        types = {
+            'GL_FLOAT',         'f',    @single
+            'GL_INT',           'i',    @int32
+            'GL_UNSIGNED_INT',  'ui',   @uint32
+            'GL_DOUBLE',        'd',    @double
+            'GL',               'i',    @int32
+            };
+        sizes = {
+            '',                 '1'
+            '_VEC2',            '2'
+            '_VEC3',            '3'
+            '_VEC4',            '4'
+            '_MAT2',            'Matrix2'
+            '_MAT3',            'Matrix3'
+            '_MAT4',            'Matrix4'
+            '_MAT2x3',          'Matrix2x3'
+            '_MAT2x4',          'Matrix2x4'
+            '_MAT3x2',          'Matrix3x2'
+            '_MAT3x4',          'Matrix3x4'
+            '_MAT4x2',          'Matrix4x2'
+            '_MAT4x3',          'Matrix4x3'
+            '_SAMPLER_1D',      '1'
+            '_SAMPLER_2D',      '1'
+            '_SAMPLER_3D',      '1'
+    
+            };
+        fcn = arrayfun(@(a) repmat(a,size(sizes,1),1),types(:,3),'uni',0);
+        temp = cellfun(@(c1,c2,c3) {strcat(c1,sizes(:,1)) strcat(sizes(:,2),c2)}, types(:,1),types(:,2),'uni',0);
+        temp = vertcat(temp{:});
+        T = table(vertcat(temp{:,1}), vertcat(temp{:,2}), vertcat(fcn{:}),'VariableNames',{'glTypeStr','glFcn','matFcn'});
+    
+        T.glType = cellfun(@(c) GetType(gl,c),T.glTypeStr);
+        T = T(T.glType ~= -1,:);
     end
-    mX = vertcat(mX{:});
-
-    samplers = {'1D' '2D' '3D' 'Cube' '2DRect' '1DArray' '2DArray' 'CubeArray' 'Buffer' '2DMS' '2DMSArray'}';
-    g = {'' 'i' 'u'};
-    samp = cellfun(@(c) [strcat(c,'sampler',samplers) repmat({'1i' 'int32'},numel(samplers),1)],g,'uni',0);
-    samp = vertcat(samp{:});
-    types = [u1 ; u234 ; m1 ; mX ; samp];
-
-
-end
-i = strcmp(type,types(:,1));
-if any(i)
-    type = types{i,2};
-else
-    i = strcmp(type,types(:,2));
+    
+    i = type == T.glType;
     if ~any(i)
-        error(['uniform type not found: ' type]);
+        error(['No type defined for ' name])
     end
+    setFcnStr = T.glFcn{i};
+    matFcn = T.matFcn{i};
+
 end
 
-mlType = str2func(types{i,3});
-
-
+function t = GetType(gl,name)
+    try
+        t = gl.(name);
+    catch
+        t = -1;
+    end
 end
 
