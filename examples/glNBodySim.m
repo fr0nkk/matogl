@@ -46,7 +46,7 @@ classdef glNBodySim < glCanvas
 
             buffer = glmu.Buffer(gl.GL_SHADER_STORAGE_BUFFER,{pos',vel'});
             
-            obj.attractors = glmu.DrawableArray(buffer,'particle',gl.GL_POINTS);
+            obj.attractors = glmu.drawable.Array(buffer,'particle',gl.GL_POINTS);
             obj.attractors.program.uniforms.maxWeight.Set(obj.maxWeight);
 
             buffer.BindBase(0,1);

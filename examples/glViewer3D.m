@@ -104,7 +104,7 @@ classdef glViewer3D < glCanvas
             u = obj.ptcloudProgram.uniforms;
             obj.cam = glmu.Camera3D(u.projection,u.view);
             array = glmu.Array({pos',col'},[false true]);
-            obj.points = glmu.DrawableArray(array,obj.ptcloudProgram,primitive);
+            obj.points = glmu.drawable.Array(array,obj.ptcloudProgram,primitive);
             
             if ~isempty(idx)
                 obj.points.SetElement(idx');
@@ -120,13 +120,13 @@ classdef glViewer3D < glCanvas
             axe_pos = single([0 0 0 ; 1 0 0 ; 0 0 0 ; 0 1 0 ; 0 0 0 ; 0 0 1]');
             axe_col = single([1 0 0 ; 1 0 0 ; 0 1 0 ; 0 1 0 ; 0 0 1 ; 0 0 1]');
 
-            obj.axe = glmu.DrawableArray({axe_pos,axe_col},obj.ptcloudProgram,gl.GL_LINES);
+            obj.axe = glmu.drawable.Array({axe_pos,axe_col},obj.ptcloudProgram,gl.GL_LINES);
 
             obj.axe.uni.model = eye(4);
             obj.axe.show = 0;
             
             quadVert = single([-1 -1 0 0; -1 1 0 1; 1 -1 1 0; 1 1 1 1]');
-            obj.screen = glmu.DrawableArray(quadVert,'screen',gl.GL_TRIANGLE_STRIP);
+            obj.screen = glmu.drawable.Array(quadVert,'screen',gl.GL_TRIANGLE_STRIP);
 
             T = glmu.Texture(0,gl.GL_TEXTURE_2D);
 

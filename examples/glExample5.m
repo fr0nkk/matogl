@@ -34,7 +34,7 @@ classdef glExample5 < glCanvas
             xyz = single([0 0 0 ; 1 0 0 ; 0 0 0 ; 0 1 0 ; 0 0 0 ; 0 0 1]');
             color = single([1 0 0 ; 1 0 0 ; 0 1 0 ; 0 1 0 ; 0 0 1 ; 0 0 1]');
             
-            obj.origin = glmu.DrawableArray({xyz,color},'example1',gl.GL_LINES);
+            obj.origin = glmu.drawable.Array({xyz,color},'example1',gl.GL_LINES);
             obj.origin.uni.model = eye(4);
             
             % make color cube
@@ -43,19 +43,19 @@ classdef glExample5 < glCanvas
             [x,y,z] = ndgrid(w,w,w);
             xyz = [x(:) y(:) z(:)] + rand(N^3,3)./N; % remove the +rand for some funky patterns
             col = xyz;
-            obj.colorcube = glmu.DrawableArray({xyz',col'},'example1','GL_POINTS'); % all GL constant args can also be set as text
+            obj.colorcube = glmu.drawable.Array({xyz',col'},'example1','GL_POINTS'); % all GL constant args can also be set as text
             obj.colorcube.uni.model = MTrans3D([0.1 0.1 0.3]) * MScale3D(0.25);
             
             % make ortho image
             im = imread('ngc6543a.jpg');
             ijNorm = single([0 0;1 0;0 1;1 1]');
             pos = ijNorm./1.5+0.2; pos(3,:) = 0;
-            obj.img2D = glmu.DrawableArray({pos,ijNorm},'example2',gl.GL_TRIANGLE_STRIP);
+            obj.img2D = glmu.drawable.Array({pos,ijNorm},'example2',gl.GL_TRIANGLE_STRIP);
             T = glmu.Texture(0,gl.GL_TEXTURE_2D,im,gl.GL_RGB,2);
             obj.img2D.AddTexture('texture1',T);
             
             % make perspective image
-            obj.img3D = glmu.DrawableArray({pos,ijNorm},'example2#2',gl.GL_TRIANGLE_STRIP); % #2 uses the 2nd instance of the same program
+            obj.img3D = glmu.drawable.Array({pos,ijNorm},'example2#2',gl.GL_TRIANGLE_STRIP); % #2 uses the 2nd instance of the same program
             T = glmu.Texture(1,gl.GL_TEXTURE_2D,'peppers.png',gl.GL_RGB,2); % texture data can also be a path to an image
             obj.img3D.AddTexture('texture1',T);
 

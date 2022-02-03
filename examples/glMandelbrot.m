@@ -4,7 +4,7 @@ classdef glMandelbrot < glCanvas
         sz = [600 450];
 
         prog
-        M % glmu.DrawableArray
+        M % glmu.drawable.Array
         
         click = struct('xy',[0 0],'z',[0 0]);
         cmap single = [jet(128) ; flipud(jet(128))];
@@ -40,7 +40,7 @@ classdef glMandelbrot < glCanvas
             obj.prog = glmu.Program('mandelbrot',preproc);
 
             vert = single([-1 -1;1 -1;-1 1;1 1]');
-            obj.M = glmu.DrawableArray({vert},obj.prog,gl.GL_TRIANGLE_STRIP);
+            obj.M = glmu.drawable.Array({vert},obj.prog,gl.GL_TRIANGLE_STRIP);
             
             obj.M.uni.offset = [-0.5 0];
             obj.M.uni.scale = 1.6;
