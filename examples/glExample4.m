@@ -20,7 +20,7 @@ classdef glExample4 < glCanvas
             vertex = single([-0.8 -0.8 0 ; 0.8 -0.8 0 ; 0 0.9 0]);
             color = single([1 0 0 ; 0 1 0 ; 0 0 1]);
             
-            obj.myTriangle = glmu.drawable.Array({vertex',color'},'example1',gl.GL_TRIANGLES);
+            obj.myTriangle = glmu.drawable.Array('example1',gl.GL_TRIANGLES,{vertex',color'});
         end
         
         function UpdateFcn(obj,d,gl)

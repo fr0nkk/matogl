@@ -21,7 +21,7 @@ classdef glExample3 < glCanvas
 
             B = glmu.Buffer(gl.GL_ARRAY_BUFFER,{vertex',color'});
 
-            obj.myVertexArray = glmu.Array(B);
+            obj.myVertexArray = glmu.ArrayPointer(B);
             
             shaderDir = fullfile(fileparts(mfilename('fullpath')),'shaders');
 

@@ -40,7 +40,7 @@ classdef glMandelbrot < glCanvas
             obj.prog = glmu.Program('mandelbrot',preproc);
 
             vert = single([-1 -1;1 -1;-1 1;1 1]');
-            obj.M = glmu.drawable.Array({vert},obj.prog,gl.GL_TRIANGLE_STRIP);
+            obj.M = glmu.drawable.Array(obj.prog,gl.GL_TRIANGLE_STRIP,{vert});
             
             obj.M.uni.offset = [-0.5 0];
             obj.M.uni.scale = 1.6;
