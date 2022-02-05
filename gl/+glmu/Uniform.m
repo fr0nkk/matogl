@@ -45,7 +45,7 @@ classdef Uniform < glmu.internal.Object
     end
     methods(Access=private)
         function InternalSet(obj,value)
-            if isa(value,'java.nio.Buffer')
+            if isa(value,'javabuffer')
                 n = value.capacity;
             else
                 n = numel(value);
@@ -53,7 +53,7 @@ classdef Uniform < glmu.internal.Object
             end
             n = n / obj.elemPerValue;
             obj.prog.Use;
-            obj.setFcn(obj.gl,obj.id,n,obj.transpose{:},value);
+            obj.setFcn(obj.gl,obj.id,n,obj.transpose{:},value.p);
         end
     end
 end

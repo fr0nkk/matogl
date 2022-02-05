@@ -18,7 +18,7 @@ classdef MultiArray < glmu.internal.Drawable
             if nargin < 3, count = n; end
             drawCount = numel(offset);
             offset = javabuffer(int32(offset));
-            count = javabuffer(uint32(count));
+            count = javabuffer(int32(count));
             obj.gl.glMultiDrawArrays(obj.primitive,offset,count,drawCount);
         end
     end

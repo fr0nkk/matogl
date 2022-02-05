@@ -7,10 +7,10 @@ classdef Array < glmu.internal.Drawable
     end
     
     methods
-        function obj = Array(program,primitive,array)
-            obj@glmu.internal.Drawable(program)
-            obj.array = glmu.ArrayPointer(array);
+        function obj = Array(program,primitive,varargin)
+            obj@glmu.internal.Drawable(program);
             obj.primitive = obj.Const(primitive,1);
+            obj.array = glmu.ArrayPointer(varargin{:});
         end
 
         function DrawFcn(obj,offset,count)

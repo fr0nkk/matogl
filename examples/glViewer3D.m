@@ -32,7 +32,7 @@ classdef glViewer3D < glCanvas
         
         ptcloudProgram
         framebuffer
-
+%         ama
         points
         axe
         screen
@@ -99,14 +99,18 @@ classdef glViewer3D < glCanvas
             obj.ptcloudProgram = glmu.Program('pointcloud');
             u = obj.ptcloudProgram.uniforms;
             obj.cam = glmu.Camera3D(u.projection,u.view);
-            array = glmu.ArrayPointer({pos',col'},[false true]);
+            buf = {pos',col'};
+            norm = [false true];
 
             if isempty(idx)
-                obj.points = glmu.drawable.Array(obj.ptcloudProgram,gl.GL_POINTS,array);
+                obj.points = glmu.drawable.Array(obj.ptcloudProgram,gl.GL_POINTS,buf,norm);
             else
-                obj.points = glmu.drawable.Element(obj.ptcloudProgram,gl.GL_TRIANGLES,array,idx');
+                obj.points = glmu.drawable.Element(obj.ptcloudProgram,gl.GL_TRIANGLES,idx',buf,norm);
             end
-            
+%             obj.ama = glmu.drawable.AutoMultiArray('pointcloud',gl.GL_POINTS,{single([0 0 0])' uint8([0 0 0])'},[0 1],[3 3],[gl.GL_FLOAT gl.GL_UNSIGNED_BYTE],[false true]);
+%             for i=1:100
+%                 id = obj.ama.AddData({pos' + [0 0 i]',col'});
+%             end
             obj.points.uni.model = eye(4);
 
             camDist = double(max(max(pos,[],1) - min(pos,[],1)));
@@ -142,6 +146,7 @@ classdef glViewer3D < glCanvas
         
         function UpdateFcn(obj,d,gl)
             % render to texture
+            tic
             obj.framebuffer.Bind;
             
             gl.glEnable(gl.GL_DEPTH_TEST);
@@ -155,6 +160,7 @@ classdef glViewer3D < glCanvas
             obj.cam.Update;
             obj.axe.Draw;
             obj.points.Draw;
+%             obj.ama.Draw;
 
             % render to screen
             obj.framebuffer.Release;
@@ -164,6 +170,7 @@ classdef glViewer3D < glCanvas
             obj.screen.Draw;
             
             d.swapBuffers;
+            1/toc
         end
         
         function ResizeFcn(obj,~,gl)
@@ -203,13 +210,13 @@ classdef glViewer3D < glCanvas
             r = 2; % click radius (square box) px
             w = 2*r+1; % square side length px
             
-            b = javabuffer(zeros(w*w,1,'single'));
+            b = javabuffer(zeros(w,w,'single'));
             
             s = obj.figSize';
             c(2) = s(2) - c(2);
             
-            gl.glReadPixels(c(1)-r,c(2)-r,w,w,gl.GL_DEPTH_COMPONENT,gl.GL_FLOAT,b);
-            depth = double(reshape(b.array,w,w));
+            gl.glReadPixels(c(1)-r,c(2)-r,w,w,gl.GL_DEPTH_COMPONENT,gl.GL_FLOAT,b.p);
+            depth = double(b.array);
             
             p = [];
             n = depth == 1;

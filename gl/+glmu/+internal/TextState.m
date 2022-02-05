@@ -53,17 +53,17 @@ classdef TextState < glmu.internal.ObjectState
             obj.RS.setColorStatic(rgba(1),rgba(2),rgba(3),rgba(4));
             M = obj.RR.getMatrix;
             M.glMatrixMode(M.GL_PROJECTION);
-            M.glLoadMatrixf(javabuffer(single(projection)));
+            M.glLoadMatrixf(javabuffer(single(projection)).p);
             if obj.RR.getRenderState.getWeight ~= 1
                 obj.RR.getRenderState.setWeight(1);
             end
             M.glMatrixMode(M.GL_MODELVIEW);
             obj.RR.enable(obj.gl,true);
             for i=1:numel(str)
-                M.glLoadMatrixf(javabuffer(single(modelview{i})));
+                M.glLoadMatrixf(javabuffer(single(modelview{i})).p);
                 pxSz = F.getPixelSize(sz(i),72);
                 obj.RS.setColorStatic(rgba(i,1),rgba(i,2),rgba(i,3),rgba(i,4));
-                obj.TRU.drawString3D(obj.gl,obj.RR,F,pxSz,javabuffer(str{i}),[],4);
+                obj.TRU.drawString3D(obj.gl,obj.RR,F,pxSz,javabuffer(str{i}).p,[],4);
             end
             obj.RR.enable(obj.gl,false);
         end

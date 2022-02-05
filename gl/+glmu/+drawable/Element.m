@@ -7,9 +7,9 @@ classdef Element < glmu.internal.Drawable
     end
     
     methods
-        function obj = Element(program,primitive,array,element)
+        function obj = Element(program,primitive,element,varargin)
             obj@glmu.internal.Drawable(program)
-            obj.array = glmu.ArrayPointer(array);
+            obj.array = glmu.ArrayPointer(varargin{:});
             obj.primitive = obj.Const(primitive,1);
             if ~isa(element,'glmu.Buffer')
                 element = glmu.Buffer(obj.gl.GL_ELEMENT_ARRAY_BUFFER,uint32(element));

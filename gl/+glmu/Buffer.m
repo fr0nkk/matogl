@@ -5,6 +5,8 @@ classdef Buffer < glmu.internal.Object
         sz
         type
         usage
+        bytePerVertex
+        bytePerValue
     end
     
     methods
@@ -15,11 +17,14 @@ classdef Buffer < glmu.internal.Object
             %   if data is [], the buffer is created but not set
             %   multiple empty possible with { [] , [] }
             % optional usage = GL usage, default GL_STATIC_DRAW
+            if isa(target,'glmu.Buffer'), obj = target; return, end
             obj.target = obj.Const(target);
             [data,n] = obj.ValidData(data);
             obj.id = obj.state.buffer.New(n);
             obj.sz = repmat([0 0],n,1);
             obj.type = zeros(n,1);
+            obj.bytePerValue = zeros(n,1);
+            obj.bytePerVertex = zeros(n,1);
             obj.Edit(data,varargin{:});
         end
 
@@ -41,12 +46,20 @@ classdef Buffer < glmu.internal.Object
             for i=1:nd
                 if isempty(data{i}), continue, end
                 obj.Bind(i);
-                [b,nb,jt,mt] = javabuffer(data{i});
-                szb = nb*b.capacity;
-                obj.gl.glBufferData(obj.target,szb,b,usage(i));
-                obj.sz(i,:) = size(data{i});
-                obj.type(i) = obj.Const(['GL_' utypes{startsWith(mt,'u')+1} upper(jt)]);
+                if ~isa(data{i},'javabuffer')
+                    b = javabuffer(data{i});
+                else
+                    b = data{i};
+                end
+                obj.bytePerValue(i) = b.bytePerValue;
+                szb = obj.bytePerValue(i)*b.capacity;
+                obj.gl.glBufferData(obj.target,szb,b.p,usage(i));
+                obj.sz(i,:) = b.sz;
+                obj.type(i) = obj.Const(['GL_' utypes{startsWith(b.matType,'u')+1} upper(b.javaType)]);
                 obj.usage(i,1) = usage(i);
+                obj.bytePerVertex(i) = obj.bytePerValue(i)*obj.sz(i,1);
+                
+                
             end
         end
 

@@ -28,22 +28,23 @@ classdef Texture < glmu.internal.Object
             if iscell(data)
                 sz = data{1};
                 type = data{2};
-                data = [];
+                data = javabuffer();
             else
                 if ischar(data), data = imread(data); end
                 if obj.ndim > 1, data = rot90(data,-1); end
                 sz = size(data);
                 sz = sz(1:obj.ndim);
                 data = permute(data,[obj.ndim+1 1:obj.ndim]);
-                [data,~,jt,mt] = javabuffer(data);
+%                 [data,~,jt,mt] = javabuffer(data);
+                data = javabuffer(data);
                 utypes = {'','UNSIGNED_'};
-                type = ['GL_' utypes{startsWith(mt,'u')+1} upper(jt)];
+                type = ['GL_' utypes{startsWith(data.matType,'u')+1} upper(data.javaType)];
                 obj.gl.glPixelStorei(obj.gl.GL_UNPACK_ALIGNMENT, 1);
             end
             type = obj.Const(type,1);
             sz = num2cell(sz);
             obj.Bind;
-            obj.editFcn(obj.gl,obj.target,0,internalformat,sz{:},0,format,type,data);
+            obj.editFcn(obj.gl,obj.target,0,internalformat,sz{:},0,format,type,data.p);
             if genMipMap && ~isempty(data)
                 obj.gl.glGenerateMipmap(obj.target);
                 if genMipMap > 1

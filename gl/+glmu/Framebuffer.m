@@ -25,7 +25,7 @@ classdef Framebuffer < glmu.internal.Object
             obj.gl.glFramebufferRenderbuffer(obj.target,obj.Const(attachment,1),obj.gl.GL_RENDERBUFFER,renderbuffer.id);
             
             b = javabuffer(int32(obj.Const(attachments)));
-            obj.gl.glDrawBuffers(n, b);
+            obj.gl.glDrawBuffers(n, b.p);
             
             assert(obj.gl.glCheckFramebufferStatus(obj.gl.GL_FRAMEBUFFER) == obj.gl.GL_FRAMEBUFFER_COMPLETE,'incomplete framebuffer');
             obj.renderbuffer = renderbuffer;

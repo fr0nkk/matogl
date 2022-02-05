@@ -20,7 +20,7 @@ classdef ObjectState < glmu.internal.Base
             if nargin < 2, n=1; end
 
             jb = javabuffer(zeros(n,1,'int32'));
-            obj.newFcn(obj.gl,n,jb);
+            obj.newFcn(obj.gl,n,jb.p);
             id = jb.array;
 
             obj.list(end+1:end+n) = id;

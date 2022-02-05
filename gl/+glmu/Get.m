@@ -7,7 +7,7 @@ if ischar(args)
     args = gl.(args);
 end
 if ~iscell(args), args = {args}; end
-getfcn(gl,args{:},b);
+getfcn(gl,args{:},b.p);
 value = b.array;
 
 end

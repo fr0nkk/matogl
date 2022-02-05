@@ -40,7 +40,7 @@ classdef Program < glmu.internal.Object
                 obj.Attach(shaders);
                 obj.Link();
                 obj.DetectUniforms;
-                obj.DetectSubroutines
+                obj.DetectSubroutines;
                 obj.state.program.SetCache(cacheProg,obj)
             end
         end
@@ -102,8 +102,8 @@ classdef Program < glmu.internal.Object
             bNum = javabuffer(int32(-1));
             bType = javabuffer(int32(-1));
             for i=1:nbUniforms
-                obj.gl.glGetActiveUniform( obj.id, i-1, c-1, bNameLen, bNum, bType, bName );
-                name = bName.array';
+                obj.gl.glGetActiveUniform( obj.id, i-1, c-1, bNameLen.p, bNum.p, bType.p, bName.p );
+                name = bName.array;
                 name = char(name(1:bNameLen.array));
                 name = regexprep(name,'\[\d+\]','');
                 obj.uniforms.(name) = glmu.Uniform(obj,name,bType.array);
@@ -111,14 +111,14 @@ classdef Program < glmu.internal.Object
         end
 
         function DetectSubroutines(obj)
-            for i=1:numel(obj.shaders)
-                type = obj.shaders{1}.type;
-                glTypeName = type2name(obj.gl,type);
-                typeName = obj.shaderTypes{strcmp(obj.shaderTypes(:,2),glTypeName),1};
-                nb = javabuffer(int32(-1));
-                obj.gl.glGetProgramStageiv(obj.id,type,obj.gl.GL_ACTIVE_SUBROUTINES,nb);
-                % todo
-            end
+%             for i=1:numel(obj.shaders)
+%                 type = obj.shaders{1}.type;
+%                 glTypeName = type2name(obj.gl,type);
+%                 typeName = obj.shaderTypes{strcmp(obj.shaderTypes(:,2),glTypeName),1};
+%                 nb = javabuffer(int32(-1));
+%                 obj.gl.glGetProgramStageiv(obj.id,type,obj.gl.GL_ACTIVE_SUBROUTINES,nb);
+%                 % todo
+%             end
         end
 
         function SetUniforms(obj,uni)
