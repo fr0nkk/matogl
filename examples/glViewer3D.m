@@ -107,7 +107,7 @@ classdef glViewer3D < glCanvas
             else
                 obj.points = glmu.drawable.Element(obj.ptcloudProgram,gl.GL_TRIANGLES,idx',buf,norm);
             end
-%             obj.ama = glmu.drawable.AutoMultiArray('pointcloud',gl.GL_POINTS,{single([0 0 0])' uint8([0 0 0])'},[0 1],[3 3],[gl.GL_FLOAT gl.GL_UNSIGNED_BYTE],[false true]);
+%             obj.ama = glmu.drawable.AutoMultiArray('pointcloud',gl.GL_POINTS,[0 1],[3 3],[gl.GL_FLOAT gl.GL_UNSIGNED_BYTE],[false true]);
 %             for i=1:100
 %                 id = obj.ama.AddData({pos' + [0 0 i]',col'});
 %             end

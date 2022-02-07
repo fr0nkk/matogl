@@ -14,12 +14,12 @@ classdef AutoMultiArray < glmu.internal.Drawable
     end
     
     methods
-        function obj = AutoMultiArray(program,primitive,example_data,varargin)
+        function obj = AutoMultiArray(program,primitive,varargin)
             obj@glmu.internal.Drawable(program);
             obj.primitive = obj.Const(primitive,1);
             obj.array = glmu.ArrayFormat(varargin{:});
             nb = obj.array.nBuffers;
-            obj.buffer = glmu.Buffer(obj.gl.GL_ARRAY_BUFFER,example_data);
+            obj.buffer = glmu.Buffer(obj.gl.GL_ARRAY_BUFFER,repmat({[]},1,nb));
             obj.needRecalc = false(1,nb);
         end
 
@@ -73,8 +73,9 @@ classdef AutoMultiArray < glmu.internal.Drawable
             obj.array.Bind;
             obj.RecalcBuffer;
             B = obj.buffer;
-            b = com.jogamp.common.nio.PointerBuffer.allocate(2);
-            obj.gl.glBindVertexBuffers(0,obj.array.nBuffers,B.id,0,b,B.bytePerVertex,0);
+            nb = obj.array.nBuffers;
+            b = com.jogamp.common.nio.PointerBuffer.allocate(nb);
+            obj.gl.glBindVertexBuffers(0,nb,B.id,0,b,B.bytePerVertex,0);
             obj.gl.glMultiDrawArrays(obj.primitive,obj.offsets.p,obj.counts.p,obj.counts.capacity);
         end
     end
