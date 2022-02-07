@@ -21,40 +21,40 @@ classdef glExample2 < glCanvas
             
 
             % make vertex buffer
-            b = javabuffer(int32(0));
-            gl.glGenBuffers(1,b);
-            vertexBuffer = b.array;
+            b = javabuffer(0,'int32');
+            gl.glGenBuffers(1,b.p);
+            vertexBufferName = b.array;
 
             % set vertex buffer
-            gl.glBindBuffer(gl.GL_ARRAY_BUFFER,vertexBuffer);
-            [b,bytesPerValue] = javabuffer(vertex');
-            gl.glBufferData(gl.GL_ARRAY_BUFFER,bytesPerValue*b.capacity,b,gl.GL_STATIC_DRAW);
+            gl.glBindBuffer(gl.GL_ARRAY_BUFFER,vertexBufferName);
+            b = javabuffer(vertex');
+            gl.glBufferData(gl.GL_ARRAY_BUFFER,b.bytePerValue*b.capacity,b.p,gl.GL_STATIC_DRAW);
             
 
             % make color buffer
-            b = javabuffer(int32(0));
-            gl.glGenBuffers(1,b);
-            colorBuffer = b.array;
+            b = javabuffer(0,'int32');
+            gl.glGenBuffers(1,b.p);
+            colorBufferName = b.array;
 
             % set color buffer
-            gl.glBindBuffer(gl.GL_ARRAY_BUFFER,colorBuffer);
-            [b,bytesPerValue] = javabuffer(color');
-            gl.glBufferData(gl.GL_ARRAY_BUFFER,bytesPerValue*b.capacity,b,gl.GL_STATIC_DRAW);
+            gl.glBindBuffer(gl.GL_ARRAY_BUFFER,colorBufferName);
+            b = javabuffer(color');
+            gl.glBufferData(gl.GL_ARRAY_BUFFER,b.bytePerValue*b.capacity,b.p,gl.GL_STATIC_DRAW);
             
 
             % make vertex array
-            b = javabuffer(int32(0));
-            gl.glGenVertexArrays(1,b);
+            b = javabuffer(0,'int32');
+            gl.glGenVertexArrays(1,b.p);
             obj.vertexArray = b.array;
             gl.glBindVertexArray(obj.vertexArray);
 
             % set vertex buffer pointer
-            gl.glBindBuffer(gl.GL_ARRAY_BUFFER,vertexBuffer)
+            gl.glBindBuffer(gl.GL_ARRAY_BUFFER,vertexBufferName)
             gl.glVertexAttribPointer(0,3,gl.GL_FLOAT,gl.GL_FALSE,0,0);
             gl.glEnableVertexAttribArray(0);
             
             % set color buffer pointer
-            gl.glBindBuffer(gl.GL_ARRAY_BUFFER,colorBuffer)
+            gl.glBindBuffer(gl.GL_ARRAY_BUFFER,colorBufferName)
             gl.glVertexAttribPointer(1,3,gl.GL_FLOAT,gl.GL_FALSE,0,0);
             gl.glEnableVertexAttribArray(1);
             

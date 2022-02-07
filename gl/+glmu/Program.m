@@ -98,9 +98,9 @@ classdef Program < glmu.internal.Object
             nbUniforms = obj.Get(obj.gl.GL_ACTIVE_UNIFORMS);
             c = 100;
             bName = javabuffer(zeros(1,c,'uint8'));
-            bNameLen = javabuffer(int32(-1));
-            bNum = javabuffer(int32(-1));
-            bType = javabuffer(int32(-1));
+            bNameLen = javabuffer(-1,'int32');
+            bNum = javabuffer(-1,'int32');
+            bType = javabuffer(-1,'int32');
             for i=1:nbUniforms
                 obj.gl.glGetActiveUniform( obj.id, i-1, c-1, bNameLen.p, bNum.p, bType.p, bName.p );
                 name = bName.array;

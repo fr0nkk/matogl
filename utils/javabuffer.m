@@ -10,10 +10,16 @@ classdef javabuffer < handle
     end
     
     methods
-        function obj = javabuffer(data)
+        function obj = javabuffer(data,matType)
             if nargin == 0, return, end
             if isa(data,'javabuffer'), obj = data; return, end
-            obj.matType = class(data);
+            if nargin < 2
+                matType = class(data);
+            else
+                f = str2func(matType);
+                data = f(data);
+            end
+            obj.matType = matType;
             [obj.javaType,obj.bytePerValue] = javatype(obj.matType);
             obj.sz = size(data);
             i = obj.sz > 0;

@@ -60,10 +60,11 @@ classdef AutoMultiArray < glmu.internal.Drawable
                 dat{i} = javabuffer.cat(2,obj.data{:,i});
             end
             obj.buffer.Edit(dat);
-            c = cellfun(@(c) c.capacity,obj.data(:,1))./obj.buffer.sz(1,1);
+            c = cellfun(@(c) c.sz(2),obj.data(:,1));
+%             c = cellfun(@(c) c.capacity,obj.data(:,1))./obj.buffer.sz(1,1);
             o = [0 ; cumsum(c(1:end-1))];
-            obj.offsets = javabuffer(int32(o));
-            obj.counts = javabuffer(int32(c));
+            obj.offsets = javabuffer(o,'int32');
+            obj.counts = javabuffer(c,'int32');
             obj.needRecalc(:) = 0;
         end
 

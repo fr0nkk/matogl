@@ -146,7 +146,7 @@ classdef glViewer3D < glCanvas
         
         function UpdateFcn(obj,d,gl)
             % render to texture
-            tic
+%             tic
             obj.framebuffer.Bind;
             
             gl.glEnable(gl.GL_DEPTH_TEST);
@@ -170,7 +170,7 @@ classdef glViewer3D < glCanvas
             obj.screen.Draw;
             
             d.swapBuffers;
-            1/toc
+%             1/toc
         end
         
         function ResizeFcn(obj,~,gl)
