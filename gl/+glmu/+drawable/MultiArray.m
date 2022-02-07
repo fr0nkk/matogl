@@ -19,7 +19,7 @@ classdef MultiArray < glmu.internal.Drawable
             drawCount = numel(offset);
             offset = javabuffer(int32(offset));
             count = javabuffer(int32(count));
-            obj.gl.glMultiDrawArrays(obj.primitive,offset,count,drawCount);
+            obj.gl.glMultiDrawArrays(obj.primitive,offset.p,count.p,drawCount);
         end
     end
 end

@@ -12,6 +12,7 @@ classdef javabuffer < handle
     methods
         function obj = javabuffer(data)
             if nargin == 0, return, end
+            if isa(data,'javabuffer'), obj = data; return, end
             obj.matType = class(data);
             [obj.javaType,obj.bytePerValue] = javatype(obj.matType);
             obj.sz = size(data);
@@ -20,7 +21,7 @@ classdef javabuffer < handle
             obj.p = java.nio.([obj.javaType 'Buffer']).allocate(obj.capacity);
             if all(i)
                 obj.p.put(data(:));
-                obj.p.clear;
+                obj.p.rewind;
             end
         end
 
@@ -43,9 +44,9 @@ classdef javabuffer < handle
             b = javabuffer(zeros([sz 0],types{1}));
             for i=1:numel(varargin)
                 b.p.put(varargin{i}.p);
-                varargin{i}.p.clear;
+                varargin{i}.p.rewind;
             end
-            b.p.clear;
+            b.p.rewind;
             b.sz = sz;
         end
     end
