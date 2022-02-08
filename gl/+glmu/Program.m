@@ -73,7 +73,7 @@ classdef Program < glmu.internal.Object
 
         function str = InfoLog(obj)
             [n,b] = obj.Get(obj.gl.GL_INFO_LOG_LENGTH);
-            str = char(glmu.Get(obj.gl,@glGetProgramInfoLog,{obj.id,n,b},n,'uint8'))';
+            str = char(glmu.Get(obj.gl,@glGetProgramInfoLog,{obj.id,n,b.p},n,'uint8'))';
         end
 
         function Link(obj)
