@@ -2,9 +2,9 @@ classdef TextState < glmu.internal.ObjectState
     
     properties
         newFcn
+        delFcn
         isInit = 0;
 
-        array
         FF
         RS
         RR
@@ -16,8 +16,6 @@ classdef TextState < glmu.internal.ObjectState
         
         function obj = New(obj)
             if obj.isInit, return, end
-            obj.array = glmu.Array;
-            obj.array.Bind;
             obj.FF = com.jogamp.graph.font.FontFactory;
             renderMode = com.jogamp.graph.curve.Region.VARWEIGHT_RENDERING_BIT;
             
@@ -49,7 +47,6 @@ classdef TextState < glmu.internal.ObjectState
                 obj.LoadedFont.(font) = newF;
             end
             F = obj.LoadedFont.(font);
-            obj.array.Bind;
             obj.RS.setColorStatic(rgba(1),rgba(2),rgba(3),rgba(4));
             M = obj.RR.getMatrix;
             M.glMatrixMode(M.GL_PROJECTION);

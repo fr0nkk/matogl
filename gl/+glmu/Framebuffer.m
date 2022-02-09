@@ -43,6 +43,10 @@ classdef Framebuffer < glmu.internal.Object
             obj.state.framebuffer.Bind(obj.target,0);
         end
 
+        function delete(obj)
+            obj.state.framebuffer.DelayedDelete(obj.id);
+        end
+
     end
 end
 

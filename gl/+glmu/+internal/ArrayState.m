@@ -2,6 +2,7 @@ classdef ArrayState < glmu.internal.ObjectState
     
     properties
         newFcn = @glGenVertexArrays
+        delFcn = @glDeleteVertexArrays
     end
     
     methods
@@ -17,7 +18,7 @@ classdef ArrayState < glmu.internal.ObjectState
         end
 
         function Delete(obj,id)
-            
+            obj.DeleteN(id);
         end
 
     end

@@ -2,6 +2,7 @@ classdef ProgramState < glmu.internal.ObjectState
     
     properties
         newFcn = @glCreateProgram
+        delFcn = @glDeleteProgram
         currentSubroutine = ''
     end
     
@@ -23,7 +24,7 @@ classdef ProgramState < glmu.internal.ObjectState
         end
 
         function Delete(obj,id)
-            
+            obj.Delete1(id);
         end
 
         function [P,name] = GetCache(obj,name)
@@ -41,6 +42,10 @@ classdef ProgramState < glmu.internal.ObjectState
             if isempty(name), return, end
             [name,i] = ValidName(name);
             obj.cache.(name){i} = P;
+        end
+
+        function EmptyCache(obj)
+            obj.cache = [];
         end
 
     end

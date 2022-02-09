@@ -70,6 +70,10 @@ classdef Shader < glmu.internal.Object
                 uniName = str(:,2);
             end
         end
+
+        function delete(obj)
+            obj.state.shader.DelayedDelete(obj.id);
+        end
     end
 end
 

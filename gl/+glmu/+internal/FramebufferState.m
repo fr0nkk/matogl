@@ -2,6 +2,7 @@ classdef FramebufferState < glmu.internal.ObjectState
     
     properties
         newFcn = @glGenFramebuffers
+        delFcn = @glDeleteFramebuffers
     end
     
     methods
@@ -17,7 +18,7 @@ classdef FramebufferState < glmu.internal.ObjectState
         end
 
         function Delete(obj,id)
-            
+            obj.DeleteN(id);
         end
 
     end

@@ -21,8 +21,13 @@ classdef Drawable < glmu.internal.Object
             obj.samplers{i} = sampler;
         end
 
+        function PrepareDraw(obj)
+        end
+
         function Draw(obj,varargin)
+            if ~isvalid(obj), warning('drawable is deleted'); return, end
             if ~obj.show, return, end
+            obj.PrepareDraw;
             obj.program.Use;
             obj.program.SetUniforms(obj.uni);
             for i=1:numel(obj.textures)

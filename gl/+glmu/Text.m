@@ -1,6 +1,7 @@
 classdef Text < glmu.internal.Object
     
     properties
+        array
         str = {}
         sz = [];
         rgba = zeros(0,4);
@@ -19,6 +20,7 @@ classdef Text < glmu.internal.Object
         function obj = Text(font,varargin)
             % font = 'fontName'
             % varargin = args for New(str,sz,rgba,model)
+            obj.array = glmu.Array;
             obj.renderer = obj.state.text.New;
             obj.font = font;
             if nargin > 1
@@ -41,6 +43,7 @@ classdef Text < glmu.internal.Object
         end
         
         function Draw(obj)
+            obj.array.Bind;
             mv = cellfun(@(c) obj.view * c,obj.model,'uni',0);
             obj.renderer.Render(obj.font,obj.str,obj.sz,obj.rgba,mv,obj.projection);
             obj.state.program.current = 0;

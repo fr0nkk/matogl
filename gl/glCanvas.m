@@ -18,6 +18,7 @@ classdef glCanvas < javacallbackmanager
     
     properties(Access=private)
         context
+        state
     end
     
     methods(Sealed=true)
@@ -47,9 +48,16 @@ classdef glCanvas < javacallbackmanager
             
             obj.populateCallbacks(obj.java);
             parent.setCallback('WindowClosed',@(~,~) obj.delete);
-            obj.glFcn(@obj.InitFcn,varargin{:});
+            obj.glFcn(@obj.glInit,varargin{:});
             obj.setMethodCallback('ComponentResized');
             obj.Update;
+            
+        end
+
+        function glInit(obj,d,gl,varargin)
+            glmu.State(0);
+            obj.state = glmu.State;
+            obj.InitFcn(d,gl,varargin{:});
         end
         
         function varargout = glFcn(obj,fcn,varargin)
@@ -103,6 +111,7 @@ classdef glCanvas < javacallbackmanager
             obj.updating = 1; temp1 = onCleanup(@() obj.EndUpdate);
             [d,gl,temp2] = getContext(obj); %#ok<ASGLU> temp2 is onCleanup()
             while obj.updateNeeded
+                obj.state.CleanUp;
                 if obj.resizeNeeded
                     obj.resizeNeeded = 0;
                     obj.ResizeFcn(d,gl);
@@ -131,10 +140,7 @@ classdef glCanvas < javacallbackmanager
             obj.glStop = 1;
             obj.rmCallback;
             delete(obj.parent);
-            try
-                glmu.State(1);
-            catch
-            end
+            obj.state.program.EmptyCache;
         end
         
     end

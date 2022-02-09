@@ -58,14 +58,16 @@ classdef Buffer < glmu.internal.Object
                 obj.type(i) = obj.Const(['GL_' utypes{startsWith(b.matType,'u')+1} upper(b.javaType)]);
                 obj.usage(i,1) = usage(i);
                 obj.bytePerVertex(i) = obj.bytePerValue(i)*obj.sz(i,1);
-                
-                
             end
         end
 
         function BindBase(obj,ibase,varargin)
             i = obj.Bind(varargin{:});
             obj.gl.glBindBufferBase(obj.target,ibase,obj.id(i));
+        end
+
+        function delete(obj)
+            obj.state.buffer.DelayedDelete(obj.id);
         end
     end
     methods(Static)

@@ -1,7 +1,7 @@
 classdef Uniform < glmu.internal.Object
     
     properties
-        prog
+        progid
         elemPerValue
         setFcn
         convertFcn
@@ -10,13 +10,13 @@ classdef Uniform < glmu.internal.Object
     end
     
     methods
-        function obj = Uniform(program,name,type,transpose)
+        function obj = Uniform(progid,name,type,transpose)
             % program = glmu.Program
             % name = uniform variable name
             % type = GL_FLOAT_VEC3 etc
             % optional transpose = true/false transpose if matrix
-            obj.prog = program;
-            obj.id = obj.gl.glGetUniformLocation(program.id,name);
+            obj.progid = progid;
+            obj.id = obj.gl.glGetUniformLocation(progid,name);
             if obj.id < 0
                 error(['Uniform location for ''' name ''' not found'])
             end
@@ -52,7 +52,7 @@ classdef Uniform < glmu.internal.Object
                 value = javabuffer(obj.convertFcn(value));
             end
             n = n / obj.elemPerValue;
-            obj.prog.Use;
+            obj.state.program.Use(obj.progid);
             obj.setFcn(obj.gl,obj.id,n,obj.transpose{:},value.p);
         end
     end

@@ -2,6 +2,7 @@ classdef TextureState < glmu.internal.ObjectState
     
     properties
         newFcn = @glGenTextures
+        delFcn = @glDeleteTextures
         activeUnit = 0;
         % current : target1 target2 target2
 %             unit0 [id1     id2     id3    ]
@@ -46,7 +47,7 @@ classdef TextureState < glmu.internal.ObjectState
         end
 
         function Delete(obj,id)
-            
+            obj.DeleteN(id);
         end
 
         function ndim = GetDim(obj,target)

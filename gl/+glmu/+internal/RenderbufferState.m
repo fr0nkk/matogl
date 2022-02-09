@@ -2,6 +2,7 @@ classdef RenderbufferState < glmu.internal.ObjectState
     
     properties
         newFcn = @glGenRenderbuffers
+        delFcn = @glDeleteRenderbuffers
     end
     
     methods
@@ -17,7 +18,7 @@ classdef RenderbufferState < glmu.internal.ObjectState
         end
 
         function Delete(obj,id)
-            
+            obj.DeleteN(id);
         end
 
     end

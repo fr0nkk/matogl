@@ -70,6 +70,10 @@ classdef Texture < glmu.internal.Object
             obj.state.texture.Active(obj.unit);
             obj.state.texture.Bind(obj.target,obj.id);
         end
+
+        function delete(obj)
+            obj.state.texture.DelayedDelete(obj.id);
+        end
     end
 end
 

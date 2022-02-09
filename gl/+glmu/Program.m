@@ -96,17 +96,17 @@ classdef Program < glmu.internal.Object
 
         function DetectUniforms(obj)
             nbUniforms = obj.Get(obj.gl.GL_ACTIVE_UNIFORMS);
-            c = 100;
-            bName = javabuffer(zeros(1,c,'uint8'));
+            maxChar = 100;
+            bName = javabuffer(zeros(1,maxChar,'uint8'));
             bNameLen = javabuffer(-1,'int32');
             bNum = javabuffer(-1,'int32');
             bType = javabuffer(-1,'int32');
             for i=1:nbUniforms
-                obj.gl.glGetActiveUniform( obj.id, i-1, c-1, bNameLen.p, bNum.p, bType.p, bName.p );
+                obj.gl.glGetActiveUniform( obj.id, i-1, maxChar-1, bNameLen.p, bNum.p, bType.p, bName.p );
                 name = bName.array;
                 name = char(name(1:bNameLen.array));
                 name = regexprep(name,'\[\d+\]','');
-                obj.uniforms.(name) = glmu.Uniform(obj,name,bType.array);
+                obj.uniforms.(name) = glmu.Uniform(obj.id,name,bType.array);
             end
         end
 
@@ -127,6 +127,10 @@ classdef Program < glmu.internal.Object
             for i=1:numel(fn)
                 obj.uniforms.(fn{i}).Set(uni.(fn{i}));
             end
+        end
+
+        function delete(obj)
+            obj.state.program.DelayedDelete(obj.id);
         end
 
     end

@@ -2,6 +2,7 @@ classdef BufferState < glmu.internal.ObjectState
     
     properties
         newFcn = @glGenBuffers
+        delFcn = @glDeleteBuffers
     end
     
     methods
@@ -23,7 +24,7 @@ classdef BufferState < glmu.internal.ObjectState
         end
 
         function Delete(obj,id)
-            
+            obj.DeleteN(id);
         end
 
     end

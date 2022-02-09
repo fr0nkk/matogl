@@ -34,6 +34,10 @@ classdef Renderbuffer < glmu.internal.Object
             obj.state.renderbuffer.Bind(obj.id);
         end
 
+        function delete(obj)
+            obj.state.renderbuffer.DelayedDelete(obj.id);
+        end
+
     end
 end
 

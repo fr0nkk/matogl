@@ -2,6 +2,7 @@ classdef ShaderState < glmu.internal.ObjectState
     
     properties
         newFcn = @glCreateShader
+        delFcn = @glDeleteShader
         shadersPath = ''
     end
     
@@ -12,7 +13,7 @@ classdef ShaderState < glmu.internal.ObjectState
         end
 
         function Delete(obj,id)
-            
+            obj.Delete1(id);
         end
 
     end

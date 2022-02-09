@@ -13,6 +13,10 @@ classdef Array < glmu.internal.Object
             obj.state.array.Bind(obj.id);
         end
 
+        function delete(obj)
+            obj.state.array.DelayedDelete(obj.id);
+        end
+
     end
 end
 
