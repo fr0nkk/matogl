@@ -25,6 +25,11 @@ classdef glViewer3D < glCanvas
     %   from the inverse projection.
     % ctrl + middle click: adjust focal length
     % ctrl + right click: adjust EDL strength
+    %
+    % To take a snapshot:
+    % v = glViewer3D( ... )
+    % img = v.Snapshot; % puts current view into img variable
+    % v.Snapshot; % creates imshow(img)
     
     properties
         figSize
@@ -138,6 +143,7 @@ classdef glViewer3D < glCanvas
             obj.clearFlag = glmu.BitFlags('GL_COLOR_BUFFER_BIT','GL_DEPTH_BUFFER_BIT');
             
             gl.glClearColor(0,0,0,0);
+            gl.glReadBuffer(gl.GL_FRONT);
             
             renderbuffer = glmu.Renderbuffer(gl.GL_DEPTH_COMPONENT32F);
             renderbuffer.AddTexture(T,gl.GL_FLOAT,gl.GL_RGBA,gl.GL_RGBA32F);
@@ -202,6 +208,26 @@ classdef glViewer3D < glCanvas
             obj.cam.MouseReleased(evt);
             obj.axe.show = any(obj.cam.click.button);
             obj.Update;
+        end
+
+        function img = Snapshot(obj)
+            img = obj.glFcn(@obj.glGetImg);
+            if nargout == 0
+                figure('Name','glViewer3D.Snapshot','NumberTitle','off');
+                img = imshow(img);
+            end
+        end
+
+        function img = glGetImg(obj,d,gl)
+            gl.glBindFramebuffer(gl.GL_FRAMEBUFFER,0);
+            w = obj.java.getWidth;
+            h = obj.java.getHeight;
+            
+            b = javabuffer(zeros(3,w,h,'uint8'));
+            gl.glReadPixels(0,0,w,h,gl.GL_RGB, gl.GL_UNSIGNED_BYTE, b.p);
+            img = b.array;
+            img = permute(img,[2 3 1]);
+            img = rot90(img);
         end
         
         function p = glGetPoint(obj,~,gl,c)
