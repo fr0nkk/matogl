@@ -32,7 +32,7 @@ classdef javabuffer < handle
         end
 
         function data = array(obj)
-            data = reshape(obj.p.array,obj.sz);
+            data = reshape(typecast(obj.p.array,obj.matType),obj.sz);
         end
     end
     methods(Static)
