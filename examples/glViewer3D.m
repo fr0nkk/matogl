@@ -230,7 +230,7 @@ classdef glViewer3D < glCanvas
             img = rot90(img);
         end
         
-        function p = glGetPoint(obj,~,gl,c)
+        function WC = glGetPoint(obj,~,gl,c)
             obj.framebuffer.Bind;
             
             r = 2; % click radius (square box) px
@@ -243,27 +243,34 @@ classdef glViewer3D < glCanvas
             
             gl.glReadPixels(c(1)-r,c(2)-r,w,w,gl.GL_DEPTH_COMPONENT,gl.GL_FLOAT,b.p);
             depth = double(b.array);
-            
-            p = [];
+
             n = depth == 1;
-            if all(n,'all'), return, end % no valid points in click box
-            depth(n) = nan;
-            depth = rot90(depth);
-            
-            [~,k] = min(depth(:));
-            [y,x] = ind2sub([w w],k);
-            
-            % normalized device coordinates
-            NDC = [(c+[x-r-0.5 ; r-y+1.5])./s ; depth(k) ; 1].*2-1;
-            
-            % world coordinates
-            WC = obj.cam.MProj * obj.cam.MView \ NDC;
-            WC = WC(1:3)./WC(4);
-            
-            if ~any(isnan(WC))
-                obj.axe.uni.model = MTrans3D(WC);
-                p = WC;
+
+            if all(n,'all')
+                % no valid points in click box
+                % returned point will be same as before but without cam xy translation
+                v = obj.cam.viewParams;
+                WC = MTrans3D([v.T(1:2) ; 0]) * MRot3D(v.R,1,[1 3]) * MTrans3D(-v.O) \ [0 0 0 1]';
+            else
+                depth(n) = nan;
+                depth = rot90(depth);
+                
+                [~,k] = min(depth(:));
+                [y,x] = ind2sub([w w],k);
+                
+                % normalized device coordinates
+                NDC = [(c+[x-r-0.5 ; r-y+1.5])./s ; depth(k) ; 1].*2-1;
+                
+                % world coordinates
+                WC = obj.cam.MProj * obj.cam.MView \ NDC;
+                
+                if any(isnan(WC))
+                    WC = [];
+                    return
+                end
             end
+            WC = WC(1:3)./WC(4);
+            obj.axe.uni.model = MTrans3D(WC);
         end
 
         function SetEDL(obj,edl)
