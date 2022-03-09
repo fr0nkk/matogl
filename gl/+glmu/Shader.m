@@ -30,13 +30,13 @@ classdef Shader < glmu.internal.Object
             obj.gl.glShaderSource(obj.id,1,source,[]);
         end
 
-        function [v,b] = Get(obj,name)
-            [v,b] = glmu.Get(obj.gl,@glGetShaderiv,{obj.id,obj.Const(name)});
+        function v = Get(obj,name)
+            v = glmu.Get(obj.gl,@glGetShaderiv,{obj.id,obj.Const(name)});
         end
 
         function str = InfoLog(obj)
-            [n,b] = obj.Get(obj.gl.GL_INFO_LOG_LENGTH);
-            str = char(glmu.Get(obj.gl,@glGetShaderInfoLog,{obj.id,n,b.p},n,'uint8'))';
+            n = obj.Get(obj.gl.GL_INFO_LOG_LENGTH);
+            str = glmu.GetStr(obj.gl,@glGetShaderInfoLog,{obj.id},n,2,3,4);
         end
 
         function Compile(obj)
@@ -46,28 +46,6 @@ classdef Shader < glmu.internal.Object
                 log = obj.InfoLog();
                 ME = MException('GL:SHADER:CompileFailed',log);
                 throw(ME);
-            end
-        end
-
-        function [uniName,type] = GetUniforms(obj)
-            str = obj.src;
-            str = regexprep(str,'/\*.*?\*/',''); % remove /* ... */
-            str = regexprep(str,'//.*?\n',''); %remove // ...
-            str = regexprep(str,'subroutine uniform .*?\n','');
-            str = regexp(str,'uniform\s+\w+.*?\s+\w+.*?;','match')';
-            str = cellfun(@(c) c(1:end-1),str,'uni',0);
-            str = regexprep(str,'\[.*?\]','');
-            str = regexprep(str,'=.*','');
-            str = cellfun(@strsplit,str,'uni',0);
-            str = str(~cellfun(@isempty,str));
-            str = cellfun(@(c) c(2:3),str,'uni',0);
-            str = vertcat(str{:});
-            if isempty(str)
-                type = {};
-                uniName = {};
-            else
-                type = str(:,1);
-                uniName = str(:,2);
             end
         end
 

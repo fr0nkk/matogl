@@ -3,7 +3,7 @@ classdef ProgramState < glmu.internal.ObjectState
     properties
         newFcn = @glCreateProgram
         delFcn = @glDeleteProgram
-        currentSubroutine = ''
+        currentSubroutine = struct
     end
     
     properties(Access = private)
@@ -19,7 +19,7 @@ classdef ProgramState < glmu.internal.ObjectState
         function Use(obj,id)
             if obj.current == id, return, end
             obj.gl.glUseProgram(id);
-            obj.currentSubroutine = '';
+            obj.currentSubroutine = struct;
             obj.current = id;
         end
 
