@@ -223,6 +223,7 @@ classdef glViewer3D < glCanvas
             w = obj.java.getWidth;
             h = obj.java.getHeight;
             
+            gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,1);
             b = javabuffer(zeros(3,w,h,'uint8'));
             gl.glReadPixels(0,0,w,h,gl.GL_RGB, gl.GL_UNSIGNED_BYTE, b.p);
             img = b.array;
