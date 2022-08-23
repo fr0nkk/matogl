@@ -23,7 +23,8 @@ classdef jFrame < javacallbackmanager
 
         function add(obj,children)
             obj.java.add(children);
-            obj.java.show;
+            obj.java.revalidate;
+            obj.java.repaint;
         end
         
         function delete(obj)
