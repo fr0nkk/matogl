@@ -100,10 +100,13 @@ classdef glViewer3D < glCanvas
         
         function InitFcn(obj,~,gl,pos,col,idx,edl)
             glmu.SetResourcesPath(fileparts(mfilename('fullpath')));
+            glAssertNoError(gl);
 
             obj.ptcloudProgram = glmu.Program('pointcloud');
+            glAssertNoError(gl);
             u = obj.ptcloudProgram.uniforms;
             obj.cam = glmu.Camera3D(u.projection,u.view);
+            glAssertNoError(gl);
             buf = {pos',col'};
             norm = [false true];
 
@@ -112,6 +115,7 @@ classdef glViewer3D < glCanvas
             else
                 obj.points = glmu.drawable.Element(obj.ptcloudProgram,gl.GL_TRIANGLES,idx',buf,norm);
             end
+            glAssertNoError(gl);
 %             obj.ama = glmu.drawable.AutoMultiArray('pointcloud',gl.GL_POINTS,[0 1],[3 3],[gl.GL_FLOAT gl.GL_UNSIGNED_BYTE],[false true]);
 %             for i=1:100
 %                 id = obj.ama.AddData({pos' + [0 0 i]',col'});
@@ -127,53 +131,75 @@ classdef glViewer3D < glCanvas
             axe_col = single([1 0 0 ; 1 0 0 ; 0 1 0 ; 0 1 0 ; 0 0 1 ; 0 0 1]');
 
             obj.axe = glmu.drawable.Array(obj.ptcloudProgram,gl.GL_LINES,{axe_pos,axe_col});
+            glAssertNoError(gl);
 
             obj.axe.uni.model = eye(4);
             obj.axe.show = 0;
             
             quadVert = single([-1 -1 0 0; -1 1 0 1; 1 -1 1 0; 1 1 1 1]');
             obj.screen = glmu.drawable.Array('screen',gl.GL_TRIANGLE_STRIP,quadVert);
+            glAssertNoError(gl);
 
             T = glmu.Texture(0,gl.GL_TEXTURE_2D);
+            glAssertNoError(gl);
 
             obj.screen.AddTexture('colorTex',T);
+            glAssertNoError(gl);
 
             obj.screen.program.uniforms.edlStrength.Set(edl);
+            glAssertNoError(gl);
             
             obj.clearFlag = glmu.BitFlags('GL_COLOR_BUFFER_BIT','GL_DEPTH_BUFFER_BIT');
+            glAssertNoError(gl);
             
             gl.glClearColor(0,0,0,0);
+            glAssertNoError(gl);
             gl.glReadBuffer(gl.GL_FRONT);
+            glAssertNoError(gl);
             
             renderbuffer = glmu.Renderbuffer(gl.GL_DEPTH_COMPONENT32F);
+            glAssertNoError(gl);
             renderbuffer.AddTexture(T,gl.GL_FLOAT,gl.GL_RGBA,gl.GL_RGBA32F);
+            glAssertNoError(gl);
             obj.framebuffer = glmu.Framebuffer(gl.GL_FRAMEBUFFER,renderbuffer,gl.GL_DEPTH_ATTACHMENT);
+            glAssertNoError(gl);
         end
         
         function UpdateFcn(obj,d,gl)
             % render to texture
 %             tic
             obj.framebuffer.Bind;
+            glAssertNoError(gl);
             
             gl.glEnable(gl.GL_DEPTH_TEST);
+            glAssertNoError(gl);
             gl.glClear(obj.clearFlag);
+            glAssertNoError(gl);
             
             camDist = -obj.cam.viewParams.T(3);
             near = clamp(camDist/10,1e-3,1);
             far = clamp(camDist*10,100,1e6);
             obj.cam.SetNearFar(near,far);
+            glAssertNoError(gl);
 
             obj.cam.Update;
+            glAssertNoError(gl);
             obj.axe.Draw;
+            glAssertNoError(gl);
             obj.points.Draw;
+            glAssertNoError(gl);
 %             obj.ama.Draw;
 
             % render to screen
             obj.framebuffer.Release;
+            glAssertNoError(gl);
 
             gl.glDisable(gl.GL_DEPTH_TEST);
+            glAssertNoError(gl);
             gl.glClear(gl.GL_COLOR_BUFFER_BIT);
+            glAssertNoError(gl);
             obj.screen.Draw;
+            glAssertNoError(gl);
             
             d.swapBuffers;
 %             1/toc
@@ -183,11 +209,15 @@ classdef glViewer3D < glCanvas
             sz = [obj.java.getWidth,obj.java.getHeight];
             obj.figSize = sz;
             obj.cam.Resize(sz);
+            glAssertNoError(gl);
             obj.framebuffer.Resize(sz);
+            glAssertNoError(gl);
             
             gl.glViewport(0,0,sz(1),sz(2));
+            glAssertNoError(gl);
             
             obj.screen.program.uniforms.scrSz.Set(sz);
+            glAssertNoError(gl);
         end
         
         function MousePressed(obj,~,evt)
