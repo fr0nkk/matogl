@@ -9,12 +9,14 @@ classdef Framebuffer < glmu.internal.Object
         function obj = Framebuffer(target,varargin)
             obj.target = obj.Const(target,1);
             obj.id = obj.state.framebuffer.New(1);
+            glAssertNoError(obj.gl)
             obj.Edit(varargin{:});
         end
 
         function Edit(obj,renderbuffer,attachment)
             renderbuffer.SetSize([100 100]);
             obj.Bind;
+            glAssertNoError(obj.gl)
             textures = renderbuffer.textures;
             n = numel(textures);
             attachments = strcat('GL_COLOR_ATTACHMENT',arrayfun(@(a) sprintf('%i',a),0:n-1,'uni',0));
@@ -22,11 +24,12 @@ classdef Framebuffer < glmu.internal.Object
                 T = textures{i};
                 obj.gl.glFramebufferTexture2D(obj.target,obj.Const(attachments{i},1),T.target,T.id,0);
             end
+            glAssertNoError(obj.gl)
             obj.gl.glFramebufferRenderbuffer(obj.target,obj.Const(attachment,1),obj.gl.GL_RENDERBUFFER,renderbuffer.id);
-            
+            glAssertNoError(obj.gl)
             b = javabuffer(int32(obj.Const(attachments)));
             obj.gl.glDrawBuffers(n, b.p);
-            
+            glAssertNoError(obj.gl)
             assert(obj.gl.glCheckFramebufferStatus(obj.gl.GL_FRAMEBUFFER) == obj.gl.GL_FRAMEBUFFER_COMPLETE,'incomplete framebuffer');
             obj.renderbuffer = renderbuffer;
         end
