@@ -41,6 +41,7 @@ classdef glCanvas < javacallbackmanager
                 cap.setNumSamples(multisample);
             end
             obj.java = com.jogamp.opengl.awt.GLCanvas(cap);
+            obj.java.setSurfaceScale([1 1]);
             
             parent.add(obj.java);
             obj.java.setAutoSwapBufferMode(false);

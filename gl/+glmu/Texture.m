@@ -10,7 +10,7 @@ classdef Texture < glmu.internal.Object
     methods
         function obj = Texture(unit,target,varargin)
             if isa(unit,'glmu.Texture'), obj=unit; return, end
-            obj.unit = unit;
+            obj.unit = unit+1;
             obj.id = obj.state.texture.New(1);
             obj.target = obj.Const(target,1);
             obj.ndim = obj.state.texture.GetDim(obj.target);
