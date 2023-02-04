@@ -154,7 +154,7 @@ classdef glViewer3D < glCanvas
             
             gl.glClearColor(0,0,0,0);
             glAssertNoError(gl);
-            gl.glReadBuffer(gl.GL_FRONT);
+%             gl.glReadBuffer(gl.GL_FRONT);
             glAssertNoError(gl);
             
             renderbuffer = glmu.Renderbuffer(gl.GL_DEPTH_COMPONENT32F);
