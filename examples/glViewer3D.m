@@ -156,6 +156,7 @@ classdef glViewer3D < glCanvas
             glAssertNoError(gl);
 %             gl.glReadBuffer(gl.GL_FRONT);
             glAssertNoError(gl);
+            gl.glViewport(0,0,500,500);
             
             renderbuffer = glmu.Renderbuffer(gl.GL_DEPTH_COMPONENT32F);
             glAssertNoError(gl);
@@ -163,12 +164,14 @@ classdef glViewer3D < glCanvas
             glAssertNoError(gl);
             obj.framebuffer = glmu.Framebuffer(gl.GL_FRAMEBUFFER,renderbuffer,gl.GL_DEPTH_ATTACHMENT);
             glAssertNoError(gl);
+            gl.glViewport(0,0,500,500);
         end
         
         function UpdateFcn(obj,d,gl)
             % render to texture
 %             tic
             obj.framebuffer.Bind;
+            gl.glViewport(0,0,obj.figSize(1),obj.figSize(2));
             glAssertNoError(gl);
             
             gl.glEnable(gl.GL_DEPTH_TEST);
@@ -192,6 +195,7 @@ classdef glViewer3D < glCanvas
 
             % render to screen
             obj.framebuffer.Release;
+            gl.glViewport(0,0,obj.figSize(1),obj.figSize(2));
             glAssertNoError(gl);
 
             gl.glDisable(gl.GL_DEPTH_TEST);
