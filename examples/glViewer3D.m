@@ -171,6 +171,11 @@ classdef glViewer3D < glCanvas
             % render to texture
 %             tic
             obj.framebuffer.Bind;
+            glAssertNoError(gl);
+            
+            gl.glDisable(gl.GL_CULL_FACE);
+            glAssertNoError(gl);
+
             gl.glViewport(0,0,obj.figSize(1),obj.figSize(2));
             glAssertNoError(gl);
             
@@ -196,6 +201,9 @@ classdef glViewer3D < glCanvas
             % render to screen
             obj.framebuffer.Release;
             gl.glViewport(0,0,obj.figSize(1),obj.figSize(2));
+            glAssertNoError(gl);
+            
+            gl.glDisable(gl.GL_CULL_FACE);
             glAssertNoError(gl);
 
             gl.glDisable(gl.GL_DEPTH_TEST);
