@@ -19,7 +19,7 @@ classdef Framebuffer < glmu.internal.Object
             glAssertNoError(obj.gl)
             textures = renderbuffer.textures;
             n = numel(textures);
-            attachments = strcat('GL_COLOR_ATTACHMENT',arrayfun(@(a) sprintf('%i',a),0:n-1,'uni',0));
+            attachments = strcat('GL_COLOR_ATTACHMENT',arrayfun(@(a) sprintf('%i',a+1),0:n-1,'uni',0));
             for i=1:n
                 T = textures{i};
                 obj.gl.glFramebufferTexture2D(obj.target,obj.Const(attachments{i},1),T.target,T.id,0);

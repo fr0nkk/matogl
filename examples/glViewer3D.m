@@ -171,6 +171,9 @@ classdef glViewer3D < glCanvas
             % render to texture
 %             tic
             obj.framebuffer.Bind;
+            
+            b = javabuffer(gl.GL_COLOR_ATTACHMENT1,'int32');
+            gl.glDrawBuffers(1, b.p);
             glAssertNoError(gl);
             
             gl.glDisable(gl.GL_CULL_FACE);
