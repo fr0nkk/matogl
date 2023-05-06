@@ -17,7 +17,7 @@ if isjava(gl)
     end
 else
     if gl
-        % cleanup
+%         disp('cleanup')
         tf = [true ; cellfun(@(c) c.getContext.isCreated,states(2:end,1))];
         states = states(tf,:);
     end

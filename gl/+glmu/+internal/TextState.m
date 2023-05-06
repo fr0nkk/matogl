@@ -32,7 +32,40 @@ classdef TextState < glmu.internal.ObjectState
             obj.isInit = 1;
         end
 
-        function Render(obj,font,str,sz,rgba,modelview,projection)
+        function Render(obj,font,strb,sz,rgba,modelview,projection,anchor)
+            F = obj.getFont(font);
+            w = obj.getWidth(font,strb.array)*sz;
+            M = obj.RR.getMatrix;
+            M.glMatrixMode(M.GL_PROJECTION);
+            M.glLoadMatrixf(javabuffer(single(projection)).p);
+            M.glMatrixMode(M.GL_MODELVIEW);
+            M.glLoadMatrixf(javabuffer(single(modelview * MTrans3D([-w*anchor(1) -sz*anchor(2) 0]))).p);
+
+            if obj.RR.getRenderState.getWeight ~= 1
+                obj.RR.getRenderState.setWeight(1);
+            end
+
+            obj.RR.enable(obj.gl,true);
+            
+            obj.RS.setColorStatic(rgba(1),rgba(2),rgba(3),rgba(4));
+            obj.TRU.drawString3D(obj.gl,obj.RR,F,sz,strb.p,[],4);
+            obj.RR.enable(obj.gl,false);
+        end
+
+        function w = getWidth(obj,font,str)
+            [tf,k] = ismember(str,obj.LoadedFont.(font).c);
+            if ~all(tf)
+                F = obj.getFont(font);
+                c = unique(str(~tf));
+                obj.LoadedFont.(font).c = [obj.LoadedFont.(font).c c];
+                obj.LoadedFont.(font).w = [obj.LoadedFont.(font).w arrayfun(@(a) F.getAdvanceWidth(F.getGlyph(a).getID,1),c)];
+                [~,k] = ismember(str,obj.LoadedFont.(font).c);
+                obj.LoadedFont.(font).c
+            end
+            w = sum(obj.LoadedFont.(font).w(k));
+        end
+
+        function F = getFont(obj,font)
             if ~isfield(obj.LoadedFont,font)
                 if ispc
                     fnt = fullfile('C:\Windows\Fonts',[font '.ttf']);
@@ -44,25 +77,11 @@ classdef TextState < glmu.internal.ObjectState
                 catch
                     newF = obj.FF.get(obj.FF.JAVA).getDefault;
                 end
-                obj.LoadedFont.(font) = newF;
+                obj.LoadedFont.(font).java = newF;
+                obj.LoadedFont.(font).c = [];
+                obj.LoadedFont.(font).w = [];
             end
-            F = obj.LoadedFont.(font);
-            obj.RS.setColorStatic(rgba(1),rgba(2),rgba(3),rgba(4));
-            M = obj.RR.getMatrix;
-            M.glMatrixMode(M.GL_PROJECTION);
-            M.glLoadMatrixf(javabuffer(single(projection)).p);
-            if obj.RR.getRenderState.getWeight ~= 1
-                obj.RR.getRenderState.setWeight(1);
-            end
-            M.glMatrixMode(M.GL_MODELVIEW);
-            obj.RR.enable(obj.gl,true);
-            for i=1:numel(str)
-                M.glLoadMatrixf(javabuffer(single(modelview{i})).p);
-                pxSz = F.getPixelSize(sz(i),72);
-                obj.RS.setColorStatic(rgba(i,1),rgba(i,2),rgba(i,3),rgba(i,4));
-                obj.TRU.drawString3D(obj.gl,obj.RR,F,pxSz,javabuffer(str{i}).p,[],4);
-            end
-            obj.RR.enable(obj.gl,false);
+            F = obj.LoadedFont.(font).java;
         end
 
         function Delete(obj,id)

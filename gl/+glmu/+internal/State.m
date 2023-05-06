@@ -9,7 +9,7 @@ classdef State < handle
         text
         framebuffer
         renderbuffer
-        resourcesPath = ''
+%         resourcesPath = ''
     end
 
     properties(Hidden)

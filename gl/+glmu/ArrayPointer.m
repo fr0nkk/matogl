@@ -46,6 +46,11 @@ classdef ArrayPointer < glmu.Array
             obj.buffer = buffer;
         end
 
+        function EditBuffer(obj,args)
+            obj.buffer.Edit(args);
+            obj.n = min(obj.buffer.sz(:,2));
+        end
+
     end
 end
 

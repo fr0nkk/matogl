@@ -3,6 +3,7 @@ classdef Program < glmu.internal.Object
     properties
         shaders
         uniforms = struct;
+        subroutines = struct;
     end
     
     properties(Access=private)
@@ -14,25 +15,15 @@ classdef Program < glmu.internal.Object
                         'frag' 'GL_FRAGMENT_SHADER'
                         'comp' 'GL_COMPUTE_SHADER'                        
                         };
-        subResourcesDir = 'shaders'
     end
     
     methods
         function obj = Program(shaders,varargin)
             % shaders = glmu.Program | {glmu.Shader} | 'shaderName'
-            %   when used with 'shaderName', add #N to select the instance N
             % optional preproc : char array to append up top before compilation
             if isa(shaders,'glmu.Program'), obj = shaders; return, end
-            cacheProg = '';
             if ischar(shaders)
-                cacheProg = shaders;
-                [P,name] = obj.state.program.GetCache(cacheProg);
-                if ~isempty(P)
-                    obj = P;
-                    return
-                else
-                    shaders = obj.GetShaders(name,varargin{:});
-                end                
+                shaders = obj.GetShaders(shaders,varargin{:});            
             end
             obj.id = obj.state.program.New();
             if nargin > 0
@@ -40,22 +31,24 @@ classdef Program < glmu.internal.Object
                 obj.Link();
                 obj.DetectUniforms;
                 obj.DetectSubroutines;
-                obj.state.program.SetCache(cacheProg,obj)
             end
         end
 
-        function shaders = GetShaders(obj,name,varargin)
+        function shaders = GetShaders(obj,shaderBasePath,varargin)
             % name : 'shaderName'
             % optional preproc : char array to append up top before compilation
-            d = fullfile(obj.state.resourcesPath,obj.subResourcesDir);
-            [fl,dl] = filelist(d,[name '.*.glsl']);
+            shdName = [shaderBasePath '.*.glsl'];
+            [fl,dl] = filelist(shdName);
+            if isempty(fl)
+                error('no shader corresponding to: %s',shdName);
+            end
             types = extractBetween(fl,'.','.');
-            gltypes = replace(types,obj.shaderTypes(:,1),obj.shaderTypes(:,2));
+            gltypes = obj.state.program.GetShaderType(types);
             ns = numel(gltypes);
             shaders = cell(1,ns);
             for i=1:ns
                 src = fileread(fullfile(dl{i},fl{i}));
-                shaders{i} = glmu.Shader(gltypes{i},src,varargin{:});
+                shaders{i} = glmu.Shader(gltypes(i),src,varargin{:});
             end
         end
         
@@ -99,8 +92,7 @@ classdef Program < glmu.internal.Object
             bType = javabuffer(-1,'int32');
             for i=1:nbUniforms
                 name = glmu.GetStr(obj.gl,@glGetActiveUniform,{obj.id, i-1,[],[], bNum.p, bType.p, []},100,3,4,7);
-                name = regexprep(name,'\[\d+\]','');
-                obj.uniforms.(name) = glmu.Uniform(obj.id,name,bType.array);
+                obj.uniforms = subsasgn(obj.uniforms,cppsubs(name),glmu.Uniform(obj.id,name,bType.array));
             end
         end
 
@@ -111,21 +103,29 @@ classdef Program < glmu.internal.Object
         function DetectSubroutines(obj)
             for i=1:numel(obj.shaders)
                 stage = obj.shaders{i}.type;
-                n = obj.GetStage(stage,obj.gl.GL_ACTIVE_SUBROUTINE_UNIFORM_LOCATIONS);
-                if n < 1, continue, end
+                
+                n = obj.GetStage(stage,obj.gl.GL_ACTIVE_SUBROUTINE_UNIFORMS);
+
+                if ~n, continue, end
+                sr = glmu.SubroutineUniform.empty(1,0);
                 for j=1:n
                     name = glmu.GetStr(obj.gl,@glGetActiveSubroutineUniformName,{obj.id, stage, j-1},100,4,5,6);
-                    obj.uniforms.(name) = glmu.SubroutineUniform(obj.id,stage,name,j-1);
+                    u = glmu.SubroutineUniform(obj.id,stage,name,j-1);
+                    obj.uniforms = subsasgn(obj.uniforms,cppsubs(name),u);
+                    sr(1,j) = u;
                 end
+                % necessary because to change 1 subroutine in opengl, you
+                % need to set them all at once
+                for j=1:n
+                    sr(j).stageSubroutines = sr;
+                end
+
             end
         end
 
         function SetUniforms(obj,uni)
             % uni = struct of uniforms and their values
-            fn = fieldnames(uni);
-            for i=1:numel(fn)
-                obj.uniforms.(fn{i}).Set(uni.(fn{i}));
-            end
+            obj.uniset(obj.uniforms,uni);
         end
 
         function delete(obj)
@@ -133,6 +133,27 @@ classdef Program < glmu.internal.Object
         end
 
     end
-end
 
+    methods(Static)
+
+        function uniset(uniStruct,valuesStruct)
+            fn = fieldnames(valuesStruct);
+            for i=1:numel(fn)
+                v = [valuesStruct.(fn{i})];
+                if isempty(v), continue, end
+                u = uniStruct.(fn{i});
+                if isstruct(u)
+                    % recursive
+                    for j=1:numel(v)
+                        glmu.Program.uniset(u(j),v(j));
+                    end
+                else
+                    % set uniform
+                    u(1).Set(v);
+                end
+            end
+        end
+
+    end
+end
 
