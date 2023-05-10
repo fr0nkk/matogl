@@ -20,13 +20,16 @@ glViewer3D();
 % load and display the Stanford bunny with the GL 3D Viewer
 bunny;
 
-% Showcase of more advanced glmu: Mandelbrot set viewer
+% Showcase of more advanced glmu: fractal viewer (mandelbrot or julia)
+% Contains a opengl subroutine uniform example
 % scroll wheel: zoom - left click: pan
-% max 100 iterations, single precision
-glMandelbrot(100,false); 
+glFractal('mandelbrot');
+% glFractal('julia');
 
 % max 5000 iterations, double precision (for big boy GPU)
-% glMandelbrot(5000,true);
+% F = glFractal('julia',true);
+% F.maxIter = 5000;
+% F.cmap = randn(256,3)./2+0.5; % trippy!!
 
 % Example of compute shader usage : N body gravity simulation
 % Close the window or ctrl+c to stop the simulation

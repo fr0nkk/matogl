@@ -2,23 +2,14 @@ classdef Drawable < glmu.internal.Object
     
     properties
         program
-        textures = {}
-        samplers = {}
         show = 1
         uni = struct
+%         storage_buffers % = {bufferForBinding0 i0 ; bufferForBinding1 i1 ; ... }
     end
     
     methods
         function obj = Drawable(program)
             obj.program = glmu.Program(program);
-        end
-        
-        function AddTexture(obj,sampler,varargin)
-            % sampler = uniform sampler variable name
-            % varargin = glmu.Texture | args for glmu.Texture(varargin{:})
-            i = size(obj.textures,1)+1;
-            obj.textures{i} = glmu.Texture(varargin{:});
-            obj.samplers{i} = sampler;
         end
 
         function PrepareDraw(obj)
@@ -28,14 +19,25 @@ classdef Drawable < glmu.internal.Object
             if ~isvalid(obj), warning('drawable is deleted'); return, end
             if ~obj.show, return, end
             obj.PrepareDraw;
+%             obj.BindSSBO(obj.storage_buffers);
             obj.program.Use;
             obj.program.SetUniforms(obj.uni);
-            for i=1:numel(obj.textures)
-                obj.textures{i}.PrepareDraw(obj.program,obj.samplers{i})
-            end
             obj.DrawFcn(varargin{:});
         end
     end
+
+%     methods(Static)
+%         function BindSSBO(sb)
+%             if ~isempty(sb)
+%                 for i=1:height(sb)
+%                     if ~isempty(sb{i,1})
+%                         sb{i,1}.BindBase(i-1,sb{i,2});
+%                     end
+%                 end
+%             end
+%         end
+%     end
+    
     methods(Abstract)
         DrawFcn(obj,varargin)
     end

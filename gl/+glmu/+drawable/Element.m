@@ -24,6 +24,11 @@ classdef Element < glmu.internal.Drawable
             obj.element.Bind;
             obj.gl.glDrawElements(obj.primitive,count,obj.element.type,offset);
         end
+
+        function EditElement(obj,ind)
+            obj.array.Bind;
+            obj.element.Edit({ind});
+        end
     end
 end
 

@@ -1,5 +1,6 @@
-classdef glExample3 < glCanvas
+classdef glExample3 < glmu.GLController
     % Same as glExample2, but using glmu to simplify objects creation and management
+    % nos using glmu.GLController instead of GLController
     
     properties
         myVertexArray
@@ -8,11 +9,12 @@ classdef glExample3 < glCanvas
     
     methods
         function obj = glExample3()
-            frame = jFrame('HelloTriangle 3',[600 450]);
-            obj.Init(frame,'GL3');
+            frame = JFrame('HelloTriangle 3',[600 450]);
+            canvas = frame.add(GLCanvas('GL3',0,obj));
+            canvas.Init;
         end
         
-        function InitFcn(obj,d,gl)
+        function InitFcn(obj,gl)
             gl.glClearColor(0,0,0,1);
             
             % data
@@ -34,19 +36,14 @@ classdef glExample3 < glCanvas
             obj.myProgram = glmu.Program({vertShader fragShader});
         end
         
-        function UpdateFcn(obj,d,gl)
+        function UpdateFcn(obj,gl)
             gl.glClear(gl.GL_COLOR_BUFFER_BIT);
             
             obj.myVertexArray.Bind;
             obj.myProgram.Use;
             gl.glDrawArrays(gl.GL_TRIANGLES,0,3);
-            
-            d.swapBuffers;
         end
-        
-        function ResizeFcn(obj,d,gl)
-            gl.glViewport(0,0,obj.java.getWidth,obj.java.getHeight);
-        end
+
     end
 end
 

@@ -1,4 +1,4 @@
-classdef glViewer3D < glCanvas
+classdef glViewer3D < glmu.GLController
     % View point cloud or meshes with opengl render
     % glViewer3D(pos) : view point cloud with color scaled on Z coords
     %   pos must be [n x 3] where n is the number of points
@@ -89,19 +89,20 @@ classdef glViewer3D < glCanvas
             obj.pos0 = mean(pos,1,'omitnan');
             pos = single(double(pos) - double(obj.pos0));
             
-            obj.Init(jFrame('GL 3D Viewer'),'GL3',0,pos,col,p.Results.idx,p.Results.edl);
+
+            frame = JFrame('HelloTriangle 4',[600 450]);
+            canvas = frame.add(GLCanvas('GL3',0,obj));
+            canvas.Init(pos,col,p.Results.idx,p.Results.edl);
             
-            obj.setMethodCallback('MousePressed');
-            obj.setMethodCallback('MouseReleased');
-            obj.setMethodCallback('MouseDragged');
-            obj.setMethodCallback('MouseWheelMoved');
-            obj.parent.setCallback('WindowClosing',@obj.WindowClosing);
+            canvas.setCallback('MousePressed',@obj.MousePressed);
+            canvas.setCallback('MouseReleased',@obj.MouseReleased);
+            canvas.setCallback('MouseDragged',@obj.MouseDragged);
+            canvas.setCallback('MouseWheelMoved',@obj.MouseWheelMoved);
         end
         
-        function InitFcn(obj,~,gl,pos,col,idx,edl)
-            glmu.SetResourcesPath(fileparts(mfilename('fullpath')));
+        function InitFcn(obj,gl,pos,col,idx,edl)
 
-            obj.ptcloudProgram = glmu.Program('pointcloud');
+            obj.ptcloudProgram = example_prog('pointcloud');
             u = obj.ptcloudProgram.uniforms;
             obj.cam = glmu.Camera3D(u.projection,u.view);
             buf = {pos',col'};
@@ -112,10 +113,7 @@ classdef glViewer3D < glCanvas
             else
                 obj.points = glmu.drawable.Element(obj.ptcloudProgram,gl.GL_TRIANGLES,idx',buf,norm);
             end
-%             obj.ama = glmu.drawable.AutoMultiArray('pointcloud',gl.GL_POINTS,[0 1],[3 3],[gl.GL_FLOAT gl.GL_UNSIGNED_BYTE],[false true]);
-%             for i=1:100
-%                 id = obj.ama.AddData({pos' + [0 0 i]',col'});
-%             end
+
             obj.points.uni.model = eye(4);
 
             camDist = double(max(max(pos,[],1) - min(pos,[],1)));
@@ -132,11 +130,11 @@ classdef glViewer3D < glCanvas
             obj.axe.show = 0;
             
             quadVert = single([-1 -1 0 0; -1 1 0 1; 1 -1 1 0; 1 1 1 1]');
-            obj.screen = glmu.drawable.Array('screen',gl.GL_TRIANGLE_STRIP,quadVert);
+            obj.screen = glmu.drawable.Array(example_prog('screen'),gl.GL_TRIANGLE_STRIP,quadVert);
 
             T = glmu.Texture(0,gl.GL_TEXTURE_2D);
 
-            obj.screen.AddTexture('colorTex',T);
+            obj.screen.uni.colorTex = T;
 
             obj.screen.program.uniforms.edlStrength.Set(edl);
             
@@ -150,7 +148,7 @@ classdef glViewer3D < glCanvas
             obj.framebuffer = glmu.Framebuffer(gl.GL_FRAMEBUFFER,renderbuffer,gl.GL_DEPTH_ATTACHMENT);
         end
         
-        function UpdateFcn(obj,d,gl)
+        function UpdateFcn(obj,gl)
             % render to texture
 %             tic
             obj.framebuffer.Bind;
@@ -166,7 +164,6 @@ classdef glViewer3D < glCanvas
             obj.cam.Update;
             obj.axe.Draw;
             obj.points.Draw;
-%             obj.ama.Draw;
 
             % render to screen
             obj.framebuffer.Release;
@@ -174,13 +171,10 @@ classdef glViewer3D < glCanvas
             gl.glDisable(gl.GL_DEPTH_TEST);
             gl.glClear(gl.GL_COLOR_BUFFER_BIT);
             obj.screen.Draw;
-            
-            d.swapBuffers;
 %             1/toc
         end
         
-        function ResizeFcn(obj,~,gl)
-            sz = [obj.java.getWidth,obj.java.getHeight];
+        function ResizeFcn(obj,gl,sz)
             obj.figSize = sz;
             obj.cam.Resize(sz);
             obj.framebuffer.Resize(sz);
@@ -192,7 +186,7 @@ classdef glViewer3D < glCanvas
         
         function MousePressed(obj,~,evt)
             c = getEvtXY(evt);
-            p = obj.glFcn(@obj.glGetPoint,c);
+            p = obj.glGetPoint(c);
 
             if bitand(evt.CTRL_MASK,evt.getModifiers) && ~isempty(p) % ctrl pressed
                 fprintf('Point coords: %.3f, %.3f, %.3f\n',double(p)+obj.pos0');
@@ -211,17 +205,10 @@ classdef glViewer3D < glCanvas
         end
 
         function img = Snapshot(obj)
-            img = obj.glFcn(@obj.glGetImg);
-            if nargout == 0
-                figure('Name','glViewer3D.Snapshot','NumberTitle','off');
-                img = imshow(img);
-            end
-        end
-
-        function img = glGetImg(obj,d,gl)
+            [gl,temp] = obj.canvas.getContext;
             gl.glBindFramebuffer(gl.GL_FRAMEBUFFER,0);
-            w = obj.java.getWidth;
-            h = obj.java.getHeight;
+            w = obj.canvas.java.getWidth;
+            h = obj.canvas.java.getHeight;
             
             gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,1);
             b = javabuffer(zeros(3,w,h,'uint8'));
@@ -229,9 +216,16 @@ classdef glViewer3D < glCanvas
             img = b.array;
             img = permute(img,[2 3 1]);
             img = rot90(img);
+
+            if nargout == 0
+                figure('Name','glViewer3D.Snapshot','NumberTitle','off');
+                imshow(img);
+                clear img
+            end
         end
         
-        function WC = glGetPoint(obj,~,gl,c)
+        function WC = glGetPoint(obj,c)
+            [gl,temp] = obj.canvas.getContext;
             obj.framebuffer.Bind;
             
             r = 2; % click radius (square box) px
@@ -275,7 +269,7 @@ classdef glViewer3D < glCanvas
         end
 
         function SetEDL(obj,edl)
-            [~,gl,temp] = obj.getContext; %#ok<ASGLU> temp is onCleanup()
+            [gl,temp] = obj.canvas.getContext; %#ok<ASGLU> temp is onCleanup()
             obj.screen.program.uniforms.edlStrength.Set(edl);
         end
         
@@ -292,14 +286,10 @@ classdef glViewer3D < glCanvas
         end
         
         function MouseWheelMoved(obj,~,evt)
-            p = obj.glFcn(@obj.glGetPoint,getEvtXY(evt));
+            p = obj.glGetPoint(getEvtXY(evt));
             obj.cam.SetRotationOrigin(p);
             obj.cam.MouseWheelMoved(evt);
             obj.Update;
-        end
-        
-        function WindowClosing(obj,~,~)
-            obj.glStop = 1;
         end
         
     end

@@ -15,7 +15,9 @@ nb = [1 2 8 4 4 8 2]'; % bytes
 if nargin > 0
     i = (mattype(1) == 'u') + 1;
     k = strcmp(mattype(i:end),jt(:,1));
-    assert(any(k),['type not defined for java: ' mattype]);
+    if ~any(k)
+        error('type not defined for java: %s', mattype);
+    end
     jt = jt{k,2};
     nb = nb(k);
 end

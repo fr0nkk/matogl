@@ -1,4 +1,4 @@
-classdef glExample1 < glCanvas
+classdef glExample1 < GLController
     % Some "Hello World!" OpenGL example using fixed function pipeline
     
     properties
@@ -7,17 +7,17 @@ classdef glExample1 < glCanvas
     
     methods
         function obj = glExample1()
-            frame = jFrame('HelloTriangle 1',[600 450]);
-            obj.Init(frame,'GL2');
+            frame = JFrame('HelloTriangle 1',[600 450]);
+            canvas = frame.add(GLCanvas('GL2',0,obj));
+            canvas.Init;
         end
         
-        function InitFcn(obj,d,gl)
+        function InitFcn(obj,gl)
             gl.glClearColor(0,0,0,1);
         end
 
-        function UpdateFcn(obj,d,gl)
-            gl.glClear( gl.GL_COLOR_BUFFER_BIT );
-
+        function UpdateFcn(obj,gl)
+            gl.glClear(gl.GL_COLOR_BUFFER_BIT);
             gl.glBegin(gl.GL_TRIANGLES);
             gl.glColor3f( 1, 0, 0 );
             gl.glVertex2f( -0.8, -0.8 );
@@ -26,13 +26,8 @@ classdef glExample1 < glCanvas
             gl.glColor3f( 0, 0, 1 );
             gl.glVertex2f( 0, 0.9 );
             gl.glEnd();
-
-            d.swapBuffers;
         end
 
-        function ResizeFcn(obj,d,gl)
-            gl.glViewport(0,0,obj.java.getWidth,obj.java.getHeight);
-        end
     end
 end
 

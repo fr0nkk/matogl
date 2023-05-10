@@ -7,6 +7,7 @@ classdef Base < handle
     methods
         function obj = Base()
             obj.gl = glmu.internal.getgl;
+            obj.Init;
         end
 
         function C = Const(obj,C,n)
@@ -26,12 +27,11 @@ classdef Base < handle
             if n>1 && numel(C) == 1, C = repmat(C,n,1); end
         end
     end
-%         function gl = get.gl(obj)
-%             if isempty(obj.gl)
-%                 obj.gl = com.jogamp.opengl.GLContext.getCurrentGL;
-%             end
-%             gl = obj.gl;
-%         end
+
+    methods(Access=protected)
+        function Init(~)
+        end
+    end
 
 end
 

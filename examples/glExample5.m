@@ -1,4 +1,4 @@
-classdef glExample5 < glCanvas
+classdef glExample5 < glmu.GLController
     
     properties
         cam single = [-45 0 -135 0 0 -3]; % [rotation translation]
@@ -11,89 +11,105 @@ classdef glExample5 < glCanvas
         img3D
         text2D
         text3D
+        text3DNorm
     end
     
     methods
         function obj = glExample5()
-            % create java frame
-            frame = jFrame('Utility Examples',obj.sz);
-            
-            % Initialize opengl in frame using GL4 profile and multisample 4
-            obj.Init(frame,'GL3',4);
+
+            frame = JFrame('Utility Examples',[600 450]);
+            canvas = frame.add(GLCanvas('GL3',4,obj));
+            canvas.Init;
             
             % activate callbacks
-            obj.setMethodCallback('MousePressed');
-            obj.setMethodCallback('MouseDragged');
-            obj.setMethodCallback('MouseWheelMoved');
+            canvas.setCallback('MousePressed',@obj.MousePressed);
+            canvas.setCallback('MouseDragged',@obj.MouseDragged);
+            canvas.setCallback('MouseWheelMoved',@obj.MouseWheelMoved);
         end
         
-        function InitFcn(obj,d,gl)
-            glmu.SetResourcesPath(fileparts(mfilename('fullpath')));
-
+        function InitFcn(obj,gl)
             % make axes
             xyz = single([0 0 0 ; 1 0 0 ; 0 0 0 ; 0 1 0 ; 0 0 0 ; 0 0 1]');
             color = single([1 0 0 ; 1 0 0 ; 0 1 0 ; 0 1 0 ; 0 0 1 ; 0 0 1]');
+
+            prog1 = example_prog('example1');
             
-            obj.origin = glmu.drawable.Array('example1',gl.GL_LINES,{xyz,color});
+            obj.origin = glmu.drawable.Array(prog1,gl.GL_LINES,{xyz,color});
             obj.origin.uni.model = eye(4);
-            
+
             % make color cube
             N = 32;
             w = single(linspace(0,1,N));
             [x,y,z] = ndgrid(w,w,w);
             xyz = [x(:) y(:) z(:)] + rand(N^3,3)./N; % remove the +rand for some funky patterns
             col = xyz;
-            obj.colorcube = glmu.drawable.Array('example1','GL_POINTS',{xyz',col'}); % all GL constant args can also be set as text
+            obj.colorcube = glmu.drawable.Array(prog1,'GL_POINTS',{xyz',col'}); % all GL constant args can also be set as text
             obj.colorcube.uni.model = MTrans3D([0.1 0.1 0.3]) * MScale3D(0.25);
             
             % make ortho image
+            prog2 = example_prog('example2');
             im = imread('ngc6543a.jpg');
             ijNorm = single([0 0;1 0;0 1;1 1]');
             pos = ijNorm./1.5+0.2; pos(3,:) = 0;
-            obj.img2D = glmu.drawable.Array('example2',gl.GL_TRIANGLE_STRIP,{pos,ijNorm});
-            T = glmu.Texture(0,gl.GL_TEXTURE_2D,im,gl.GL_RGB,2);
-            obj.img2D.AddTexture('texture1',T);
-            
+            obj.img2D = glmu.drawable.Array(prog2,gl.GL_TRIANGLE_STRIP,{pos,ijNorm});
+            tex1 = glmu.Texture(0,gl.GL_TEXTURE_2D,im,gl.GL_RGB,2);
+            obj.img2D.uni.mytexture = tex1;
+            obj.img2D.uni.view = eye(4);
+            obj.img2D.uni.model = eye(4);
+            obj.img2D.uni.projection = eye(4);
+
             % make perspective image
-            obj.img3D = glmu.drawable.Array('example2#2',gl.GL_TRIANGLE_STRIP,{pos,ijNorm}); % #2 uses the 2nd instance of the same program
-            T = glmu.Texture(1,gl.GL_TEXTURE_2D,'peppers.png',gl.GL_RGB,2); % texture data can also be a path to an image
-            obj.img3D.AddTexture('texture1',T);
-
+            obj.img3D = glmu.drawable.Array(prog2,gl.GL_TRIANGLE_STRIP,{pos,ijNorm});
+            tex2 = glmu.Texture(1,gl.GL_TEXTURE_2D,'peppers.png',gl.GL_RGB,2); % texture data can also be a path to an image
+            obj.img3D.uni.mytexture = tex2;
+            obj.img3D.uni.model = eye(4);
+            
+            % make perspective text
             model = MTrans3D([0.9 0 0.8]) * MRot3D([90 0 180],1);
-            obj.text3D = glmu.Text('arial','Perspective',0.1,[1 1 0 1],model);
-            obj.text3D.Add('Normal',0.1,[1 1 0 1]);
+            obj.text3D = glmu.drawable.Text('Perspective',0.1,[1 1 0 1],eye(4),model,eye(4),'arial');
+            
+            % make normal 3D text
+            obj.text3DNorm = glmu.drawable.Text('Normal',0.1,[1 1 0 1]);
+            
+            % make 2D text
+            obj.text2D = glmu.drawable.Text('Ortho',18,[1 1 0 1],eye(4),MTrans3D([-150 -100 0]));
 
-            obj.text2D = glmu.Text('arial','Ortho',18,[1 1 0 1],MTrans3D([-150 -100 0]));
+
             gl.glEnable(gl.GL_DEPTH_TEST);
             gl.glClearColor(0,0,0,0);
             
         end
         
-        function UpdateFcn(obj,d,gl)
+        function UpdateFcn(obj,gl)
             % d is the GLDrawable
             % gl is the GL object
             
             % clear color and depth
             gl.glClear(glmu.BitFlags('GL_COLOR_BUFFER_BIT','GL_DEPTH_BUFFER_BIT'));
             
-            % make the view transform matrix and set it in the shader
+            % make the view transform matrix
             m = MTrans3D(obj.cam(4:6)) * MRot3D(obj.cam(1:3),1,[1 3]);
             
             obj.origin.uni.view = m;
-            obj.img3D.uni.view = m;
-            obj.text3D.view = m;
-            obj.text3D.model{2} = MTrans3D([0.9 0 0.5]) * MRot3D(-obj.cam(1:3),1);
+            obj.origin.Draw;
+
+            obj.colorcube.uni.view = m;
+            obj.colorcube.Draw;
 
             obj.img2D.Draw;
+
+            obj.img3D.uni.view = m;
             obj.img3D.Draw;
-            obj.origin.Draw;
-            obj.colorcube.Draw;
-            
+
+            obj.text3D.view = m;
             obj.text3D.Draw;
+
+            % keep the normal text facing the camera
+            obj.text3DNorm.model = MTrans3D([0.9 0 0.5]) * MRot3D(-obj.cam(1:3),1);
+            obj.text3DNorm.view = m;
+            obj.text3DNorm.Draw;
+
             obj.text2D.Draw;
-            
-            % update display
-            d.swapBuffers;
             
         end
         
@@ -128,23 +144,20 @@ classdef glExample5 < glCanvas
             obj.Update;
         end
         
-        function ResizeFcn(obj,d,gl)
-            % new canvas size
-            newSz = [obj.java.getWidth obj.java.getHeight];
-            obj.sz = newSz;
-            
+        function ResizeFcn(obj,gl,sz)
             % keep the gl view fullscreen
-            gl.glViewport(0,0,newSz(1),newSz(2));
+            gl.glViewport(0,0,sz(1),sz(2));
             
             % Update the projection matrix
-            m = MProj3D('F',[obj.sz(1)/obj.sz(2) 45 0.1 200],1);
+            m = MProj3D('F',[sz(1)/sz(2) 45 0.1 200],1);
+            obj.origin.uni.projection = m;
+            obj.colorcube.uni.projection = m;
+            obj.img3D.uni.projection = m;
+            obj.text3D.proj = m;
+            obj.text3DNorm.proj = m;
 
-            obj.origin.program.uniforms.projection.Set(m);
-            obj.img3D.program.uniforms.projection.Set(m);
-            obj.text3D.projection = m;
-            obj.text2D.projection = MProj3D('O',[obj.sz -1 1]);
+            obj.text2D.proj = MProj3D('O',[sz -1 1]);
         end
-        
         
     end
 end

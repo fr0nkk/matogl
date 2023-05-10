@@ -50,7 +50,7 @@ classdef Camera3D < glmu.internal.Base
         function M = get.MView(obj)
             if obj.MView_need_recalc
                 v = obj.viewParams;
-                obj.MView =  MTrans3D(v.T) * MRot3D(v.R,1,[1 3]) * MTrans3D(-v.O);
+                obj.MView =  MTrans3D(v.T) * MRot3D(v.R,1,[1 2 3]) * MTrans3D(-v.O);
                 obj.MView_need_recalc = 0;
             end
             M = obj.MView;
@@ -117,7 +117,7 @@ classdef Camera3D < glmu.internal.Base
         function SetRotationOrigin(obj,coord)
             if isempty(coord), return, end
             v = obj.viewParams;
-            M =  MTrans3D(v.T) * MRot3D(v.R,1,[1 3]);
+            M =  MTrans3D(v.T) * MRot3D(v.R,1,[1 2 3]);
             camTranslate = M * [coord-v.O ; 1];
             obj.viewParams.T = camTranslate(1:3);
             obj.viewParams.O = coord;
