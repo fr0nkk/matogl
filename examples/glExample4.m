@@ -7,9 +7,8 @@ classdef glExample4 < glmu.GLController
     
     methods
         function obj = glExample4()
-            frame = JFrame('HelloTriangle 4',[600 450]);
-            canvas = frame.add(GLCanvas('GL3',0,obj));
-            canvas.Init;
+            % can be chained in newer matlab versions:
+            JFrame('HelloTriangle 4').add(GLCanvas('GL3',0,obj)).Init;
         end
         
         function InitFcn(obj,gl)
@@ -18,8 +17,8 @@ classdef glExample4 < glmu.GLController
             vertex = single([-0.8 -0.8 0 ; 0.8 -0.8 0 ; 0 0.9 0]);
             color = single([1 0 0 ; 0 1 0 ; 0 0 1]);
             
-            shadersDir = fullfile(fileparts(mfilename('fullpath')),'shaders');
-            shaderPath = fullfile(shadersDir,'example1');
+            thisDir = fileparts(mfilename('fullpath'));
+            shaderPath = fullfile(thisDir,'shaders','example1');
             obj.myTriangle = glmu.drawable.Array(shaderPath,gl.GL_TRIANGLES,{vertex',color'});
         end
         

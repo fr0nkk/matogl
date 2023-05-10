@@ -39,7 +39,7 @@ classdef glFractal < glmu.GLController
                 target = 'GL3';
             end
 
-            frame = JFrame('GL Mandelbrot',obj.sz);
+            frame = JFrame('glFractal',obj.sz);
             canvas = frame.add(GLCanvas(target,0,obj));
             canvas.Init(doublePrecisionFlag);
 

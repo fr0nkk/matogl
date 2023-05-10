@@ -16,7 +16,7 @@ classdef glNBodySim < glmu.GLController
     methods
         function obj = glNBodySim()
 
-            frame = JFrame('HelloTriangle 4',[600 450]);
+            frame = JFrame('glNBodySim',[600 450]);
             canvas = frame.add(GLCanvas('GL3',0,obj));
             obj.t = tic;
             canvas.Init;
