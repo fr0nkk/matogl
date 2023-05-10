@@ -31,7 +31,11 @@ classdef javabuffer < handle
         end
 
         function data = array(obj,varargin)
-            data = reshape(typecast(obj.p.array,obj.matType),obj.sz);
+            data = obj.p.array;
+            if ~strcmp(obj.matType,'char')
+                data = typecast(obj.p.array,obj.matType);
+            end
+            data = reshape(data,obj.sz);
             if nargin > 1
                 data = data(varargin{:});
             end

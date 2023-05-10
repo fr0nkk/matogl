@@ -1,4 +1,4 @@
-classdef glExample2 < glCanvas
+classdef glExample2 < GLController
     % Same as glExample1, but using shader rendering pipeline
     
     properties
@@ -8,11 +8,12 @@ classdef glExample2 < glCanvas
     
     methods
         function obj = glExample2()
-            frame = jFrame('HelloTriangle 2',[600 450]);
-            obj.Init(frame,'GL3');
+            frame = JFrame('HelloTriangle 2',[600 450]);
+            canvas = frame.add(GLCanvas('GL3',0,obj));
+            canvas.Init;
         end
         
-        function InitFcn(obj,d,gl)
+        function InitFcn(obj,gl)
             gl.glClearColor(0,0,0,1);
             
             % data
@@ -82,7 +83,7 @@ classdef glExample2 < glCanvas
             
         end
 
-        function UpdateFcn(obj,d,gl)
+        function UpdateFcn(obj,gl)
             gl.glClear(gl.GL_COLOR_BUFFER_BIT);
             
             % prepare to draw with shader and vertex array
@@ -92,13 +93,8 @@ classdef glExample2 < glCanvas
             % draw
             gl.glDrawArrays(gl.GL_TRIANGLES,0,3);
             
-            % update display
-            d.swapBuffers;
         end
-
-        function ResizeFcn(obj,d,gl)
-            gl.glViewport(0,0,obj.java.getWidth,obj.java.getHeight);
-        end
+        
     end
 end
 

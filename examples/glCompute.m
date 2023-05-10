@@ -1,4 +1,4 @@
-classdef glCompute < glCanvas
+classdef glCompute < glmu.GLController
     % work in progress
     %
     % Enables computing on the GPU for simple functions operating on large
@@ -8,21 +8,27 @@ classdef glCompute < glCanvas
     %
     % todo: make easier to use
     properties
+        shadersPath
         progs
         groupSz
-        state
+        stateString
         buffer
     end
     
     methods
-        function obj = glCompute(glslCompPath)
-            obj.Init(jFrame('glCompute',[300 100]),'GL4',4,glslCompPath);
+        function obj = glCompute(shadersPath)
+            obj.shadersPath = shadersPath;
+
+            frame = JFrame('glCompute',[300 100]);
+            canvas = frame.add(GLCanvas('GL3',4,obj));
+            canvas.Init;
+            frame.setCallback('WindowClosing',@(~,~)obj.delete)
         end
 
-        function InitFcn(obj,d,gl,glslCompPath)
-            glmu.SetResourcesPath(glslCompPath);
+        function InitFcn(obj,gl)
             gl.glClearColor(1,1,1,0);
-            obj.state = glmu.Text('arial','glCompute',20,[0 0 0 1]);
+            obj.stateString = glmu.drawable.Text('glCompute',20,[0 0 0 1]);%,eye(4),MTrans3D([-150 -100 0]));
+            % obj.state = glmu.Text('arial','glCompute',20,[0 0 0 1]);
             N = 8;
             B = cell(1,N);
             obj.buffer = glmu.Buffer(gl.GL_SHADER_STORAGE_BUFFER,B);
@@ -33,24 +39,24 @@ classdef glCompute < glCanvas
 
         function InitCompute(obj,prog,alias,workgroupsize)
             % todo add iBufferIn and iBufferOut arguments to simplify calling
-            [d,gl,temp] = obj.getContext;
+            [gl,temp] = obj.canvas.getContext;
             preproc = sprintf('#define WORKGROUPSIZE %i',workgroupsize);
-            obj.progs.(alias) = glmu.Program(prog,preproc);
+            obj.progs.(alias) = glmu.Program(fullfile(obj.shadersPath,prog),preproc);
             obj.groupSz.(alias) = workgroupsize;
         end
 
         function SetConstants(obj,alias,s)
-            [d,gl,temp] = obj.getContext;
+            [gl,temp] = obj.canvas.getContext;
             obj.progs.(alias).SetUniforms(s);
         end
 
         function SetBuffer(obj,B)
-            [d,gl,temp] = obj.getContext;
+            [gl,temp] = obj.canvas.getContext;
             obj.buffer.Edit(B,gl.GL_DYNAMIC_DRAW);
         end
 
         function GetBuffer(obj,iBuffer,jb)
-            [d,gl,temp] = obj.getContext;
+            [gl,temp] = obj.canvas.getContext;
             obj.buffer.Bind(iBuffer);
             b = gl.glMapBuffer(obj.buffer.target,gl.GL_READ_ONLY);
             jb.p.put(b.(['as' jb.javaType 'Buffer']));
@@ -59,25 +65,22 @@ classdef glCompute < glCanvas
         end
 
         function Run(obj,alias,nbElems)
-            [d,gl,temp] = obj.getContext;
+            [gl,temp] = obj.canvas.getContext;
             n = ceil(nbElems / obj.groupSz.(alias));
             obj.progs.(alias).Dispatch(n,1,1);
             gl.glMemoryBarrier(bitor(gl.GL_SHADER_STORAGE_BARRIER_BIT,gl.GL_BUFFER_UPDATE_BARRIER_BIT));
         end
 
-        function UpdateFcn(obj,d,gl)
+        function UpdateFcn(obj,gl)
             gl.glClear(gl.GL_COLOR_BUFFER_BIT);
 
-            obj.state.Draw;
-
-            d.swapBuffers
+            obj.stateString.Draw;
         end
 
-        function ResizeFcn(obj,d,gl)
-            sz = [obj.java.getWidth,obj.java.getHeight];
+        function ResizeFcn(obj,gl,sz)
             gl.glViewport(0,0,sz(1),sz(2));
-            obj.state.projection = MProj3D('O',[sz -1 1]);
-            obj.state.model{1} = MTrans3D([-sz(1)./2+5 -10 0]);
+            obj.stateString.proj = MProj3D('O',[sz -1 1]);
+            obj.stateString.model = MTrans3D([-sz(1)./2+5 -10 0]);
         end
         
     end

@@ -60,7 +60,6 @@ classdef TextState < glmu.internal.ObjectState
                 obj.LoadedFont.(font).c = [obj.LoadedFont.(font).c c];
                 obj.LoadedFont.(font).w = [obj.LoadedFont.(font).w arrayfun(@(a) F.getAdvanceWidth(F.getGlyph(a).getID,1),c)];
                 [~,k] = ismember(str,obj.LoadedFont.(font).c);
-                obj.LoadedFont.(font).c
             end
             w = sum(obj.LoadedFont.(font).w(k));
         end

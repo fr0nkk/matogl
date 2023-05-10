@@ -66,6 +66,11 @@ classdef javacallbackmanager < handle
                 end
             end
         end
+
+        function callback = getCallback(obj,target)
+            obj.isValidCallback(target,1);
+            callback = obj.h.([target 'Callback']);
+        end
         
     end
 end

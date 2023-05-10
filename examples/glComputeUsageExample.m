@@ -7,13 +7,17 @@ for i=1:3
 
     tic
     ml_out = myFunction(input);
-    fprintf('matlab time: %.6f\n',toc)
+    ml_time = toc;
+    fprintf('matlab time: %.6f\n',ml_time);
     
     tic
     gl_out = myFunction_gl(input);
-    fprintf('gl time: %.6f\n',toc)
+    gl_time = toc;
+    fprintf('gl time: %.6f\n',gl_time);
 
 end
+
+fprintf('speedup: x%.2f\n', ml_time / gl_time);
 
 assert(all(abs(ml_out - gl_out) < 0.01,'all'))
 
@@ -23,7 +27,8 @@ function out = myFunction_gl(in)
     persistent glComp outbuffer
     if isempty(glComp) || ~isvalid(glComp)
         thisPath = fileparts(mfilename('fullpath'));
-        glComp = glCompute(thisPath);
+        shadersPath = fullfile(thisPath,'shaders');
+        glComp = glCompute(shadersPath);
         glComp.InitCompute('example_glcompute','myComputeAlias',1024);
         const = struct('const1',1);
         glComp.SetConstants('myComputeAlias',const);
