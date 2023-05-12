@@ -1,4 +1,4 @@
-# MATLAB OpenGL
+# Access OpenGL from MATLAB
 Access the OpenGL rendering pipeline directly from matlab.
 
 No mex file, toolbox, or any other external library needed.
