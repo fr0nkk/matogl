@@ -1,6 +1,6 @@
-addpath('gl');
-addpath('utils');
-addpath('examples');
+
+matogl_paths(); % add paths
+% matogl_paths(false); % remove paths
 
 % Example of a basic OpenGL render: Hello Triangle
 glExample1; % using old OpenGL render pipeline
