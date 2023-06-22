@@ -90,7 +90,7 @@ classdef glViewer3D < glmu.GLController
             pos = single(double(pos) - double(obj.pos0));
             
 
-            frame = JFrame('HelloTriangle 4',[600 450]);
+            frame = JFrame('glViewer3D',[600 450]);
             canvas = frame.add(GLCanvas('GL3',0,obj));
             canvas.Init(pos,col,p.Results.idx,p.Results.edl);
             
