@@ -2,12 +2,8 @@ classdef glFractal < glmu.GLController
     
     properties
         sz = [600 450];
-
         drawable % glmu.drawable.Array
-        
         click = struct('xy',[0 0],'z',[0 0]);
-        % cmap single = [jet(128) ; flipud(jet(128))];
-
     end
 
     properties(SetObservable)
@@ -33,7 +29,6 @@ classdef glFractal < glmu.GLController
             if doublePrecisionFlag
                 obj.maxIter = 1000;
                 target = 'GL4';
-
             else
                 obj.maxIter = 100;
                 target = 'GL3';
