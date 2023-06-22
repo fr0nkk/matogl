@@ -6,7 +6,7 @@
     <param.company />
     <param.summary>Access the OpenGL rendering pipeline directly from matlab</param.summary>
     <param.description />
-    <param.screenshot />
+    <param.screenshot>${PROJECT_ROOT}\bunny.jpg</param.screenshot>
     <param.version>3.1.0</param.version>
     <param.output>${PROJECT_ROOT}\matogl.mltbx</param.output>
     <param.products.name />
@@ -67,7 +67,6 @@ START_HERE.m</param.exclude.filters>
       <param.email />
       <param.company />
       <param.description />
-      <param.screenshot />
       <param.output />
       <param.products.name />
       <param.products.id />
@@ -102,6 +101,7 @@ START_HERE.m</param.exclude.filters>
       <file>C:\Users\Francis\Documents\MATLAB\matogl</file>
     </fileset.rootdir>
     <fileset.rootfiles>
+      <file>C:\Users\Francis\Documents\MATLAB\matogl\.gitattributes</file>
       <file>C:\Users\Francis\Documents\MATLAB\matogl\doc</file>
       <file>C:\Users\Francis\Documents\MATLAB\matogl\examples</file>
       <file>C:\Users\Francis\Documents\MATLAB\matogl\gl</file>
