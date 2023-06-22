@@ -4,13 +4,18 @@ classdef JObj < handle
         java
     end
 
-    properties(Abstract,Hidden)
-        constructor
+    properties(Constant,Abstract)
+        isEDT logical
+        JClass char
     end
     
     methods
         function obj = JObj(varargin)
-            obj.java = obj.constructor(varargin{:});
+            if obj.isEDT
+                obj.java = javaObjectEDT(obj.JClass,varargin{:});
+            else
+                obj.java = javaObject(obj.JClass,varargin{:});
+            end
         end
 
         function v = const(obj,v)
@@ -19,4 +24,3 @@ classdef JObj < handle
         end
     end
 end
-

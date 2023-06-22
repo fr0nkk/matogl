@@ -6,6 +6,7 @@ pathList = {
     'gl'
     'examples'
     'utils'
+    fullfile('utils','java')
     };
 
 if addFlag

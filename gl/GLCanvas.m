@@ -1,7 +1,11 @@
 classdef GLCanvas < JComponent
     
+    properties(Constant)
+        isEDT = false
+        JClass = 'com.jogamp.opengl.awt.GLCanvas'
+    end
+
     properties
-        constructor = @com.jogamp.opengl.awt.GLCanvas
         autoSwapBuffer logical = 1
         glStop logical = 0;
         autoCheckError logical = 1;
