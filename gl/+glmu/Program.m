@@ -104,16 +104,17 @@ classdef Program < glmu.internal.Object
             for i=1:numel(obj.shaders)
                 stage = obj.shaders{i}.type;
                 
-                n = obj.GetStage(stage,obj.gl.GL_ACTIVE_SUBROUTINE_UNIFORMS);
+                n = obj.GetStage(stage,obj.gl.GL_ACTIVE_SUBROUTINE_UNIFORM_LOCATIONS);
 
                 if ~n, continue, end
-                sr = glmu.SubroutineUniform.empty(1,0);
+                sr = cell(1,n);
                 for j=1:n
                     name = glmu.GetStr(obj.gl,@glGetActiveSubroutineUniformName,{obj.id, stage, j-1},100,4,5,6);
                     u = glmu.SubroutineUniform(obj.id,stage,name,j-1);
                     obj.uniforms = subsasgn(obj.uniforms,cppsubs(name),u);
-                    sr(1,j) = u;
+                    sr{j} = u;
                 end
+                sr = horzcat(sr{:});
                 % necessary because to change 1 subroutine in opengl, you
                 % need to set them all at once
                 for j=1:n

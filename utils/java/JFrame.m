@@ -1,8 +1,12 @@
 classdef JFrame < JComponent
     % basic JFrame display in matlab
 
+    properties(Constant)
+        JClass = 'javax.swing.JFrame'
+        isEDT = false
+    end
+
     properties
-        constructor = @javax.swing.JFrame
         title
     end
     

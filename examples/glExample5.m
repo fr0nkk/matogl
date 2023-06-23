@@ -48,7 +48,7 @@ classdef glExample5 < glmu.GLController
             
             % make ortho image
             prog2 = example_prog('example2');
-            im = imread('ngc6543a.jpg');
+            im = imread('office_3.jpg');
             ijNorm = single([0 0;1 0;0 1;1 1]');
             pos = ijNorm./1.5+0.2; pos(3,:) = 0;
             obj.img2D = glmu.drawable.Array(prog2,gl.GL_TRIANGLE_STRIP,{pos,ijNorm});
