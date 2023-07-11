@@ -6,7 +6,7 @@ No mex file, toolbox, or any other external library needed.
 [![View Matlab OpenGL on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/102109-matlab-opengl)
 
 ## Examples
-A few examples are included, see `START_HERE.m` for a brief description of each of them.
+A few examples are included, see `doc/GettingStarted.mlx` for a brief description of some of them. You can open the files and see the inner workings.
 
 ### 3D Viewer Example
 ![Screenshot 2021-12-07 153637](https://user-images.githubusercontent.com/93832337/145102562-3cc09f72-08ba-433b-9840-32b8796a1f32.png)
