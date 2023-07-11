@@ -22,6 +22,12 @@ switch type
         ar=in(1); fov=in(2); n=in(3); f=in(4);
         if degFlag, fov=fov/180*pi; end
         M([1 6 11 12 15 16]) = [1/(ar*tan(fov/2)) 1/tan(fov/2) (f+n)/(n-f) -1 2*f*n/(n-f) 0];
+    case 'F2'
+        % perspective with fov - balancing aspect ratio
+        % in = [aspectRatio FOV near far]
+        ar=in(1); fov=in(2); n=in(3); f=in(4);
+        if degFlag, fov=fov/180*pi; end
+        M([1 6 11 12 15 16]) = [1/(min(ar,1)*tan(fov/2)) 1/(min(1/ar,1)*tan(fov/2)) (f+n)/(n-f) -1 2*f*n/(n-f) 0];
     otherwise
         error('invalid projection type');
 end
