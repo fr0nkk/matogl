@@ -19,7 +19,7 @@ classdef JFrame < JComponent
             obj.title = title;
             obj.size = sz;
 %             obj.java.setUndecorated(1);
-            obj.java.setDefaultCloseOperation(obj.java.DISPOSE_ON_CLOSE);
+            obj.java.setDefaultCloseOperation(obj.java.HIDE_ON_CLOSE); % will be disposed by the delete fcn
             obj.java.setLocationRelativeTo([]); % set position to center of screen
             obj.java.setVisible(true);
             
@@ -32,6 +32,10 @@ classdef JFrame < JComponent
 
         function t = get.title(obj)
             t = char(obj.java.getTitle);
+        end
+
+        function delete(obj)
+            obj.java.dispose;
         end
         
     end
