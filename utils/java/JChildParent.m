@@ -2,12 +2,12 @@ classdef JChildParent < handle
     %JCHILDPARENT Summary of this class goes here
     %   Detailed explanation goes here
     
-    properties
+    properties(Hidden)
         child = {}
         parent
     end
     
-    methods
+    methods(Hidden)
         function comp = addChild(obj,comp)
             obj.child{end+1} = comp;
             comp.parent = obj;
