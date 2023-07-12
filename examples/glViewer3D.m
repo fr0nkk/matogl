@@ -216,6 +216,24 @@ classdef glViewer3D < glmu.GLController
                 clear img
             end
         end
+
+        function depth = GetDepth(obj)
+            [gl,temp] = obj.canvas.getContext;
+            obj.framebuffer.ReadFrom(1);
+            w = obj.canvas.java.getWidth;
+            h = obj.canvas.java.getHeight;
+            
+            gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,1);
+            b = javabuffer(zeros(w,h,'single'));
+            gl.glReadPixels(0,0,w,h,gl.GL_DEPTH_COMPONENT, gl.GL_FLOAT, b.p);
+            depth = rot90(b.array);
+
+            if nargout == 0
+                figure('Name','glViewer3D.GetDepth','NumberTitle','off');
+                imshow(depth);
+                clear depth
+            end
+        end
         
         function WC = glGetPoint(obj,c)
             [gl,temp] = obj.canvas.getContext;
