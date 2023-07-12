@@ -51,12 +51,14 @@ classdef ObjectState < glmu.internal.Base
             n = numel(id);
             b = javabuffer(id,'int32');
             obj.delFcn(obj.gl,n,b.p);
+            obj.current(ismember(obj.current,id)) = 0;
         end
 
         function Delete1(obj,id)
             for i=1:numel(id)
                 obj.delFcn(obj.gl,id(i))
             end
+            obj.current(ismember(obj.current,id)) = 0;
         end
         
     end
