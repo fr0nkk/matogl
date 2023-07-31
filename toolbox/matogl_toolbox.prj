@@ -7,7 +7,7 @@
     <param.summary>Access the OpenGL rendering pipeline directly from matlab</param.summary>
     <param.description />
     <param.screenshot>${PROJECT_ROOT}\bunny.jpg</param.screenshot>
-    <param.version>3.1.1</param.version>
+    <param.version>3.1.2</param.version>
     <param.output>${PROJECT_ROOT}\matogl.mltbx</param.output>
     <param.products.name />
     <param.products.id />
