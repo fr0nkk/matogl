@@ -252,7 +252,7 @@ classdef glViewer3D < glmu.GLController
 
             n = depth == 1;
 
-            if all(n,'all')
+            if all(n(:))
                 % no valid points in click box
                 % returned point will be same as before but without cam xy translation
                 v = obj.cam.viewParams;
