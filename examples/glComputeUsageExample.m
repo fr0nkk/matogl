@@ -19,7 +19,7 @@ end
 
 fprintf('speedup: x%.2f\n', ml_time / gl_time);
 
-assert(all(abs(ml_out - gl_out) < 0.01,'all'))
+assert(all(abs(ml_out(:) - gl_out(:)) < 0.01))
 
 end
 

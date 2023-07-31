@@ -50,7 +50,7 @@ if isempty(k)
 
     T.glType = cellfun(@(c) GetType(gl,c),T.glTypeStr);
     T = T(T.glType ~= -1,:);
-    k=height(P)+1;
+    k=size(P,1)+1;
     P(k,:) = {c T};
 end
 
