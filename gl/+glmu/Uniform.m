@@ -42,7 +42,7 @@ classdef Uniform < glmu.internal.Object
                 value = vertcat(value.unit);
             end
             try
-                if all(obj.lastValue == value,'all'), return, end
+                if all(obj.lastValue(:) == value(:)), return, end
             catch
             end
             obj.InternalSet(value);

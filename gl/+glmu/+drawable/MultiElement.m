@@ -11,7 +11,7 @@ classdef MultiElement < glmu.drawable.Element
         function DrawFcn(obj)
             obj.array.Bind;
             obj.element.Bind;
-            for i=1:height(obj.countoffsets)
+            for i=1:size(obj.countoffsets,1)
                 if numel(obj.multi_uni) >= i
                     obj.program.SetUniforms(obj.multi_uni{i});
                 end
