@@ -92,3 +92,8 @@ You can call gl commands when not inside one of these functions. To do so, use `
 An utility package is included in `gl\+glmu`. To use this package, the controller must be a `glmu.GLController`. The more advanced examples use it.
 
 It is not needed to make your own application. However, it helps a lot to abstract some opengl stuff. Feel free to make your own or to contribute to this project!
+
+## Addons using matogl
+- [Fast Visualization](https://www.mathworks.com/matlabcentral/fileexchange/132892-fast-visualization)
+
+If you make and publish an addon using matogl, I would be happy to add it to this list.
