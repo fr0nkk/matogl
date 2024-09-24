@@ -1,3 +1,4 @@
+%#function GLController
 classdef GLController < GLController
     
     properties
