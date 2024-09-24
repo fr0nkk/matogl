@@ -38,16 +38,18 @@ classdef Program < glmu.internal.Object
             % name : 'shaderName'
             % optional preproc : char array to append up top before compilation
             shdName = [shaderBasePath '.*.glsl'];
-            [fl,dl] = filelist(shdName);
-            if isempty(fl)
+            listing = dir(shdName);
+            if isempty(listing)
                 error('no shader corresponding to: %s',shdName);
             end
-            types = extractBetween(fl,'.','.');
+            f = {listing.name}';
+            fn = fullfile({listing.folder}',f);
+            types = extractBetween(f,'.','.');
             gltypes = obj.state.program.GetShaderType(types);
             ns = numel(gltypes);
             shaders = cell(1,ns);
             for i=1:ns
-                src = fileread(fullfile(dl{i},fl{i}));
+                src = fileread(fn{i});
                 shaders{i} = glmu.Shader(gltypes(i),src,varargin{:});
             end
         end
