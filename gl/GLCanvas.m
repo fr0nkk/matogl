@@ -171,7 +171,7 @@ classdef GLCanvas < JComponent
         function CheckError(gl)
             err = gl.glGetError();
             while err > 0
-                softwarn(['GL Error 0x' dec2hex(err,4)])
+                fprintf(['[' char(8) 'GL Error 0x%04X]' char(8) '\n'],err);
                 err = gl.glGetError();
             end
         end
