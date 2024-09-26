@@ -2,20 +2,19 @@ function out = BuildUniformLookup(gl)
 
 persistent P
 if isempty(P)
-    P = cell(0,2);
+    P = containers.Map('KeyType','char','ValueType','any');
 end
 
 c = class(gl);
-k = find(strcmp(P(:,1),c));
 
-if isempty(k)
+if ~isKey(P,c)
     types = {
-        'GL_FLOAT',         'f',    @single
-        'GL_INT',           'i',    @int32
-        'GL_UNSIGNED_INT',  'ui',   @uint32
-        'GL_DOUBLE',        'd',    @double
-        'GL_BOOL',          'i',    @int32
-        'GL',               'i',    @int32
+        'GL_FLOAT',         'f',    'single'
+        'GL_INT',           'i',    'int32'
+        'GL_UNSIGNED_INT',  'ui',   'uint32'
+        'GL_DOUBLE',        'd',    'double'
+        'GL_BOOL',          'i',    'int32'
+        'GL',               'i',    'int32'
         };
     sizes = {
         '',                 '1'
@@ -41,21 +40,20 @@ if isempty(k)
     fcn = arrayfun(@(a) repmat(a,size(sizes,1),1),types(:,3),'uni',0);
     temp = cellfun(@(c1,c2,c3) {strcat(c1,sizes(:,1)) strcat(sizes(:,2),c2)}, types(:,1),types(:,2),'uni',0);
     temp = vertcat(temp{:});
-    T = table(vertcat(temp{:,1}), vertcat(temp{:,2}), vertcat(fcn{:}),'VariableNames',{'glTypeStr','glFcn','matFcn'});
+    T = table(vertcat(temp{:,1}), vertcat(temp{:,2}), vertcat(fcn{:}),'VariableNames',{'glTypeStr','glFcn','matType'});
 
     tf = contains(T.glTypeStr,{'_SAMPLER_','_IMAGE_'});
     T.glFcn(tf) = {'1i'};
-    T.matFcn(tf) = {@int32};
+    T.matType(tf) = {'int32'};
     
 
     T.glType = cellfun(@(c) GetType(gl,c),T.glTypeStr);
     T = T(T.glType ~= -1,:);
-    k=size(P,1)+1;
-    P(k,:) = {c T};
+    P(c) = T;
 end
 
 
-out = P{k,2};
+out = P(c);
 
 end
 

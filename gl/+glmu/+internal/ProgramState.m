@@ -41,13 +41,13 @@ classdef ProgramState < glmu.internal.ObjectState
             obj.curSubroutine.(str) = value;
         end
 
-        function [setFcnStr,matFcn] = ConvertType(obj,type,name)
+        function [setFcnStr,matType] = ConvertType(obj,type,name)
             i = type == obj.uniLookup.glType;
             if ~any(i)
                 error(['No type defined for ' name])
             end
             setFcnStr = obj.uniLookup.glFcn{i};
-            matFcn = obj.uniLookup.matFcn{i};
+            matType = obj.uniLookup.matType{i};
         end
 
         function type = GetShaderType(obj,str)

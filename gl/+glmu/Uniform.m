@@ -4,7 +4,7 @@ classdef Uniform < glmu.internal.Object
         progid
         elemPerValue
         setFcn
-        convertFcn
+        matType
         transpose = {};
         lastValue = nan
     end
@@ -21,7 +21,7 @@ classdef Uniform < glmu.internal.Object
                 error(['Uniform location for ''' name ''' not found'])
             end
             type = obj.Const(type,1);
-            [setFcnStr,obj.convertFcn] = obj.state.program.ConvertType(type,name);
+            [setFcnStr,obj.matType] = obj.state.program.ConvertType(type,name);
             sz = str2double(regexp(setFcnStr,'\d','match'));
             isMatrix = startsWith(setFcnStr,'Matrix');
             if isMatrix && numel(sz) == 1, sz = [sz sz]; end
@@ -34,7 +34,7 @@ classdef Uniform < glmu.internal.Object
         end
 
         function Set(obj,value)
-            % vlue = numerical | java.nio.Buffer | glmu.Texture (for
+            % value = numerical | java.nio.Buffer | glmu.Texture (for
             % sampler2D) | glmu.TextureImage (for image2D)
             if isempty(value), return, end
             if isa(value,'glmu.internal.TextureBase')
@@ -49,7 +49,7 @@ classdef Uniform < glmu.internal.Object
     methods(Access=private)
         function InternalSet(obj,value)
             if ~isa(value,'javabuffer')
-                value = javabuffer(obj.convertFcn(value));
+                value = javabuffer(value,obj.matType);
             end
             n = value.capacity / obj.elemPerValue;
             obj.state.program.Use(obj.progid);
