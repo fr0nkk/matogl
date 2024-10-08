@@ -19,8 +19,9 @@ classdef MultiElement < glmu.drawable.Element
                     obj.idUni.Set(i-1);
                 end
                 co = obj.countoffsets(i,:);
+                bpe = obj.element.nbytes / obj.element.nbVertex;
                 % obj.gl.glDrawElements(obj.primitive,co(1),obj.element.type,co(2)*obj.element.bytePerVertex);
-                obj.gl.glDrawElements(obj.primitive,co(1),obj.element.type,co(2)+obj.element.offset);
+                obj.gl.glDrawElements(obj.primitive,co(1),obj.element.type,co(2)*bpe+obj.element.offset);
             end
         end
 

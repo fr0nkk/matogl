@@ -12,7 +12,7 @@ classdef Element < glmu.internal.Drawable
             obj.array = glmu.ArrayPointer(varargin{:});
             obj.primitive = obj.Const(primitive,1);
             if ~isa(element,'glmu.VertexAttrib')
-                element = glmu.VertexAttrib.FromData(uint32(element),obj.gl.GL_ELEMENT_ARRAY_BUFFER);
+                element = glmu.VertexAttrib.FromData(uint32(element),obj.gl.GL_ELEMENT_ARRAY_BUFFER,'GL_STATIC_DRAW','integer');
                 % element = glmu.Buffer(uint32(element),obj.gl.GL_ELEMENT_ARRAY_BUFFER);
             end
             obj.element = element;
